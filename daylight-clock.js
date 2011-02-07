@@ -58,12 +58,12 @@ function daylightometer(mode) {
     //var d = new Date(2010, 5, 21, 14, 37, 33, 123);
     var d = new Date();
     
-    var cNight = "rgba(0,0,60,1)";
-    var cDay = "rgba(200,200,200,0.9)";
+    var cNight = "rgba(0,0,90,1)";
+    var cDay = "rgba(200,200,240,0.9)";
     var cText = "rgba(100,100,100,0.9)";
     
     var fontsize = 10;
-    var linewidth = "3.0";
+    var linewidth = "6.0";
     var ic = 240;
     var cx = 110;
     var cy = 110;
@@ -139,7 +139,7 @@ function daylightometer(mode) {
 	var tmprad;
 	if (mode == 12) {
 	    if (d.getHours() < 12)
-		tmpRad = 0.5 * (hour2rad(0, mode) + hour2rad(riseHour, mode));
+		tmpRad = Math.PI + 0.5 * (hour2rad(0, mode) + hour2rad(riseHour, mode));
 	    else
 		tmpRad = -Math.PI / 4 + 0.5 * (hour2rad(setHour, mode));
 	}
@@ -161,7 +161,7 @@ function daylightometer(mode) {
 	ctx.moveTo(cx, cy);
 	var hour = d.getHours() + d.getMinutes() / 60;
 	ctx.lineTo(cx + rad * Math.cos(hour2rad(hour, mode)), cy + rad * Math.sin(hour2rad(hour, mode)));
-	ctx.strokeStyle = "rgba(255,0,0,0.5)";
+	ctx.strokeStyle = "rgba(255,20,60,0.5)";
 	ctx.stroke();
 	ctx.closePath();
 	
@@ -179,6 +179,14 @@ function daylightometer(mode) {
 	    var tmpx = cx + trad * Math.cos(hour2rad(i, mode)) - (fontsize / 2);
 	    var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + (fontsize / 2);
 	    ctx.fillText(i, tmpx, tmpy);
-	}  
+
+	    // Hour tics
+	    ctx.beginPath();   
+	    ctx.moveTo(cx + (rad-5) * Math.cos(hour2rad(i, mode)), cy + (rad-5) * Math.sin(hour2rad(i, mode)));
+	    ctx.lineTo(cx + rad * Math.cos(hour2rad(i, mode)), cy + rad * Math.sin(hour2rad(i, mode)));
+	    ctx.strokeStyle = "rgba(40,40,40,1)";
+	    ctx.stroke();
+	    ctx.closePath();
+	}
     }
 }
