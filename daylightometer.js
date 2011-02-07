@@ -1,3 +1,21 @@
+// daylight-clock - sunrise/sunset clock on HTML5 canvas
+//
+// https://github.com/mpolla/daylight-clock
+//
+// Copyright (c) 2011 Matti Pöllä
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 // Transform floating point hours (0.00 ... 23.99)
 // into radians (-PI/4 ... + 3*PI/4)
 function hour2rad(hour, mode) {
