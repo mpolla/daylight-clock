@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset=utf-8>
+    <title>Daylight clock</title>
+    <script type="text/javascript" src="./daylight-clock.js">Please enable JavaScript.</script>
+    <script type="text/javascript" src="./SunriseSunset.js"></script>
+    <script type="text/javascript" src="http://j.maxmind.com/app/geoip.js"></script>
+
+    <style type="text/css">
+      canvas { border: 0px solid black; }
+    </style>
+  </head>
+  <body onload="dom24h();">
+    <canvas id="daylightometer" width="280" height="300"></canvas>
+  <p style="font-size: 8pt"><a href="./index.html">12 h view</a></p>
+  </body>
+</html>
