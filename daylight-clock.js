@@ -105,9 +105,9 @@ function draw() {
     var fontsize = 10;
     var linewidth = "6.0";
     var ic = 240;
-    var cx = 140;
-    var cy = 160;
-    var rad = 80;
+    var cx = 150;
+    var cy = 170;
+    var rad = 90;
     var trad = rad + 14;
     var offset = -d.getTimezoneOffset() / 60;
     
@@ -235,6 +235,7 @@ function draw() {
 	
 	    // Print hour tics
 	ctx.fillStyle = cText;
+	ctx.font = "10pt Arial";
 	ctx.textAlign = "center";
 	var start = 1;
 	var end = 24;
@@ -245,9 +246,10 @@ function draw() {
 		end /= 2;
 	}
 	for (i=start; i<=end; i++) {
-	    var tmpx = cx + trad * Math.cos(hour2rad(i, mode)) - (fontsize / 2);
-	    var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + (fontsize / 2);
-	    //ctx.fillText(i, tmpx, tmpy);
+	    var tmpx = cx + trad * Math.cos(hour2rad(i, mode));
+	    var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + fontsize/2;
+	    if (i%3==0)
+		ctx.fillText(i, tmpx, tmpy);
 	    
 	    // Hour tics
 
@@ -260,8 +262,7 @@ function draw() {
 	}
 	
 	
-	// Show sunrise/sunset ticker
-	
+	// Show sunrise/sunset ticker	
 	ctx.textAlign = "left";
 	ctx.font = "10pt Arial";
 	ctx.fillText(geoip_city() + "/" + geoip_country_name() + " " + d.toTimeString(), 10, 15);
@@ -273,14 +274,26 @@ function draw() {
 	else if (hourNow > setHour)
 	    ctx.fillText("sunrise in " + timeremaining(riseHour+(24-hourNow)), 10, 35);
 
-	ctx.font = fontsize + "pt Arial";
+
 	ctx.textAlign = "center";
-	ctx.fillText("sunrise", cx+(rad+30)*Math.cos(hour2rad(riseHour,mode)), cy+(rad+30)*Math.sin(hour2rad(riseHour,mode)));
-	ctx.fillText("at " + hourstr(riseHour), cx+(rad+30)*Math.cos(hour2rad(riseHour,mode)), 12+cy+(rad+30)*Math.sin(hour2rad(riseHour,mode)));
-
-	ctx.fillText("sunset", cx+(rad+30)*Math.cos(hour2rad(setHour,mode)), cy+(rad+30)*Math.sin(hour2rad(setHour,mode)));
-	ctx.fillText("at " + hourstr(setHour), cx+(rad+30)*Math.cos(hour2rad(setHour,mode)), 12+cy+(rad+30)*Math.sin(hour2rad(setHour,mode)));
-
+	
+	if (riseHour < hourNow && hourNow < setHour)
+	    ctx.font = "bold " + fontsize + "pt Arial";
+	else
+	    ctx.font = fontsize + "pt Arial";
+	
+	ctx.fillText("sunset", cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
+	ctx.fillText("at " + hourstr(setHour), cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
+	
+	
+	if (hourNow < riseHour || hourNow > setHour)
+	    ctx.font = "bold " + fontsize + "pt Arial";
+	else
+	    ctx.font = fontsize + "pt Arial";
+	
+	ctx.fillText("sunrise", cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
+	ctx.fillText("at " + hourstr(riseHour), cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
+	
     }
 }
 
