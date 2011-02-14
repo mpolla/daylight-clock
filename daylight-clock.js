@@ -78,17 +78,29 @@ function timeremaining(time) {
     
     //return hours + ":" + mins + ":" + secs;
     if (hours >= 2)
-	return hours + " hours";
+	return Math.round(time) + " hours";
     else if (hours >= 1)
 	return "one hour and " + mins + " minutes";
     else if (mins > 5)
 	return mins + " minutes";
-    else if (mins > 1)
+    else if (mins >= 1)
 	return mins + " minutes and " + secs + " seconds";
     else
 	return secs + " seconds";
 }
 
+// Adapted from 
+// http://www.netlobo.com/url_query_string_javascript.html
+function http_param( param) {
+    param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+    var regexS = "[\\?&]" + param + "=([^&#]*)";
+    var regex = new RegExp(regexS);
+    var results = regex.exec(window.location.href);
+    if (results == null)
+	return "";
+    else
+	return results[1];
+}
 
 // Draw clock
 function draw() {
@@ -113,8 +125,24 @@ function draw() {
     
     var canvas = document.getElementById("daylightometer");
     
-    //var myLocation = new SunriseSunset( 2011, 0, 9, 67.8, 27); 
-    var myLocation = new SunriseSunset( d.getFullYear(), d.getMonth()+1, d.getDate()+1, geoip_latitude(), geoip_longitude());
+    //var myLocation = new SunriseSunset( 2011, 0, 9, 67.8, 27);
+
+
+    var longitude = http_param('lat');
+    var latitude = http_param('lon');
+    var location_name = '';
+    
+    // Check for lat/long coordinates in URL parameters
+    if (! http_param('lat') && ! http_param('long')) {
+	latitude = geoip_latitude();
+	longitude = geoip_longitude();
+	location_name = geoip_city() + "/" + geoip_country_name();
+    }
+    else {
+	location_name = latitude + "° lat, " + longitude + "° lon";    
+    }
+
+    var myLocation = new SunriseSunset( d.getFullYear(), d.getMonth()+1, d.getDate()+1, latitude, longitude);
     
     var riseHour = myLocation.sunriseLocalHours(offset);
     var setHour = myLocation.sunsetLocalHours(offset);
@@ -141,7 +169,7 @@ function draw() {
 
 	// background
 	ctx.fillStyle = "rgb(255, 255, 255)";
-	ctx.fillRect(0, 0, 280, 300);
+	ctx.fillRect(0, 0, 300, 320);
 
 	// Print debug info
 	//ctx.fillStyle = cText;
@@ -154,8 +182,10 @@ function draw() {
 	//ctx.fillText("Night lenght " + nightLen , ic, 110);
 
 	// current time in decimal hours (0.00 ... 23.99)
-	hourNow = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
-	
+	if (! http_param('lat') && !http_param('lon'))
+	    hourNow = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
+	else
+	    hourNow = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
 
 	// Daytime sector
 	if (mode == 12) {
@@ -265,7 +295,10 @@ function draw() {
 	// Show sunrise/sunset ticker	
 	ctx.textAlign = "left";
 	ctx.font = "10pt Arial";
-	ctx.fillText(geoip_city() + "/" + geoip_country_name() + " " + d.toTimeString(), 10, 15);
+	if (! http_param('lat'))
+	    ctx.fillText(location_name + " " + d.toTimeString(), 10, 15);
+	else
+	    ctx.fillText(location_name + " " + d.toUTCString(), 10, 15);
 	ctx.font = "bold 14pt Arial";
 	if (hourNow < riseHour)
 	    ctx.fillText("sunrise in " + timeremaining(riseHour-hourNow), 10, 35);
