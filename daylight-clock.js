@@ -218,14 +218,14 @@ function draw() {
 	
 	ctx.textAlign = "center";
 	// display day length if sun is up and night is long
-	if ( (hourNow < riseHour || hourNow > setHour) && (24-setHour+riseHour)>12) {}
+	if ( mode == 12 && (hourNow < riseHour || hourNow > setHour) && (24-setHour+riseHour)>12) {}
 	else {
 	    ctx.fillStyle = cNightL;
 	    ctx.font = "bold 10pt Arial";
 	    ctx.fillText("day length", dlx, dly-7);
 	    ctx.fillText(dayLen, dlx, dly+7);
 	}
-	if ( (hourNow > riseHour && hourNow < setHour) && (setHour-riseHour)>12 ) {}
+	if ( mode == 12 && (hourNow > riseHour && hourNow < setHour) && (setHour-riseHour)>12 ) {}
 	else {
 	    ctx.fillStyle = cDayL;
 	    ctx.font = "bold 10pt Arial";
