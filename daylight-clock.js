@@ -217,14 +217,16 @@ function draw() {
 	var nly = cy + (trad / 3) * Math.sin(tmpRad + Math.PI) + (fontsize / 2);
 	
 	ctx.textAlign = "center";
-
-	if (mode == 24 || true) {
+	// display day length if sun is up and night is long
+	if ( (hourNow < riseHour || hourNow > setHour) && (24-setHour+riseHour)>12) {}
+	else {
 	    ctx.fillStyle = cNightL;
 	    ctx.font = "bold 10pt Arial";
 	    ctx.fillText("day length", dlx, dly-7);
 	    ctx.fillText(dayLen, dlx, dly+7);
 	}
-	if (mode == 24 || true) {
+	if ( (hourNow > riseHour && hourNow < setHour) && (setHour-riseHour)>12 ) {}
+	else {
 	    ctx.fillStyle = cDayL;
 	    ctx.font = "bold 10pt Arial";
 	    ctx.fillText("night length", nlx, nly-7);
