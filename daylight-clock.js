@@ -113,17 +113,25 @@ function draw() {
     var cDay = "rgba(190,190,220,1)";
     var cDayL = "rgba(140,140,200,1)";
     var cText = "rgba(100,100,100,0.9)";
+
+    var canvas = document.getElementById("daylightometer");
+    var ctx = canvas.getContext("2d");
     
-    var fontsize = 10;
-    var linewidth = "6.0";
-    var ic = 240;
-    var cx = 150;
-    var cy = 170;
-    var rad = 90;
-    var trad = rad + 14;
+    ctx.canvas.width  = window.innerWidth - 20;
+    ctx.canvas.height = window.innerHeight -10;
+    
+    var w = ctx.canvas.width;
+    var h = ctx.canvas.height;
+    
+    var fontsize = 0.02*w;
+    //var ic = 240;
+    var cx = w/2;
+    var cy = h*0.5;
+    var rad = w*0.27;
+    var trad = rad*1.1;
     var offset = -d.getTimezoneOffset() / 60;
     
-    var canvas = document.getElementById("daylightometer");
+
     
     //var myLocation = new SunriseSunset( 2011, 0, 9, 67.8, 27);
 
@@ -163,19 +171,18 @@ function draw() {
     var nightLenM = Math.round(60 * (night % 1));
     var nightLen = nightLenH + ":" + zeroPad(nightLenM, 2);
     var nightLen = timeremaining(night);
+
+
     
-    if (canvas.getContext) {
-	var ctx = canvas.getContext("2d");
+    //if (canvas.getContext) {
 
-	//ctx.canvas.width  = window.innerWidth - 200;
-	//ctx.canvas.height = window.innerHeight -200;
 
-	ctx.font = "" + fontsize + "pt Arial";
-	ctx.lineWidth = linewidth;
+	ctx.font = "" + Math.floor(0.05*h) + "pt Arial";
+	ctx.lineWidth = w*0.018;
 
 	// background
 	ctx.fillStyle = "rgb(255, 255, 255)";
-	ctx.fillRect(0, 0, 300, 320);
+	ctx.fillRect(0, 0, w, h);
 
 	// Print debug info
 	//ctx.fillStyle = cText;
@@ -211,23 +218,23 @@ function draw() {
 	    else if ((hourNow < riseHour) || (hourNow > setHour)) {
 		drawSector(ctx, cx, cy, cDay, rad, hour2rad(setHour, mode), hour2rad(riseHour, mode));
 		drawSector(ctx, cx, cy, cNight, rad, hour2rad(riseHour, mode), hour2rad(setHour, mode));
-		drawSector(ctx, cx, cy, cNight, rad-10, hour2rad(riseHour, mode), hour2rad(0, mode));
-		drawSector(ctx, cx, cy, cNight, rad-10, hour2rad(0, mode), hour2rad(setHour, mode));
+		drawSector(ctx, cx, cy, cNight, rad*0.9, hour2rad(riseHour, mode), hour2rad(0, mode));
+		drawSector(ctx, cx, cy, cNight, rad*0.9, hour2rad(0, mode), hour2rad(setHour, mode));
 	    }
 	    // Sun up
 	    else {
 
 		if ((setHour - riseHour) < 12) {
 		    drawSector(ctx, cx, cy, cNight, rad, 0, 2*Math.PI);
-		    drawSector(ctx, cx, cy, cNight, rad-10, 0, 2*Math.PI);
-		    drawSector(ctx, cx, cy, cDay, rad-10, hour2rad(hourNow, mode), hour2rad(riseHour, mode));
-		    drawSector(ctx, cx, cy, cDay, rad-10, hour2rad(setHour, mode), hour2rad(hourNow, mode));
+		    drawSector(ctx, cx, cy, cNight, rad*0.9, 0, 2*Math.PI);
+		    drawSector(ctx, cx, cy, cDay, rad*0.9, hour2rad(hourNow, mode), hour2rad(riseHour, mode));
+		    drawSector(ctx, cx, cy, cDay, rad*0.9, hour2rad(setHour, mode), hour2rad(hourNow, mode));
 		}
 		else {
 		    drawSector(ctx, cx, cy, cNight, rad, hour2rad(riseHour,mode), hour2rad(setHour,mode));
 		    drawSector(ctx, cx, cy, cDay, rad, hour2rad(setHour,mode), hour2rad(riseHour,mode));
 
-		    drawSector(ctx, cx, cy, cDay, rad-10, 0, 2*Math.PI);
+		    drawSector(ctx, cx, cy, cDay, rad*0.9, 0, 2*Math.PI);
 		}
 
 
@@ -271,21 +278,21 @@ function draw() {
 	if ( mode == 12 && (hourNow < riseHour || hourNow > setHour) && (24-setHour+riseHour)>12) {}
 	else {
 	    ctx.fillStyle = cNightL;
-	    ctx.font = "bold 10pt Arial";
-	    ctx.fillText("day length", dlx, dly-7);
-	    ctx.fillText(dayLen, dlx, dly+7);
+	    ctx.font = "bold "+w*0.02+"pt Arial";
+	    ctx.fillText("day length", dlx, dly-w*0.02);
+	    ctx.fillText(dayLen, dlx, dly+w*0.02);
 	}
 	if ( mode == 12 && (hourNow > riseHour && hourNow < setHour) && (setHour-riseHour)>12 ) {}
 	else {
 	    ctx.fillStyle = cDayL;
-	    ctx.font = "bold 10pt Arial";
-	    ctx.fillText("night length", nlx, nly-7);
-	    ctx.fillText(nightLen, nlx, nly+7);
+	    ctx.font = "bold "+w*0.02+"pt Arial";
+	    ctx.fillText("night length", nlx, nly-w*0.02);
+	    ctx.fillText(nightLen, nlx, nly+w*0.02);
 	}
 	
-	    // Print hour tics
+	// Print hour tics
 	ctx.fillStyle = cText;
-	ctx.font = "10pt Arial";
+	ctx.font = w*0.02 + "pt Arial";
 	ctx.textAlign = "center";
 	var start = 1;
 	var end = 24;
@@ -297,14 +304,14 @@ function draw() {
 	}
 	for (i=start; i<=end; i++) {
 	    var tmpx = cx + trad * Math.cos(hour2rad(i, mode));
-	    var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + fontsize/2;
+	    var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + w*0.01;
 	    if (i%3==0)
 		ctx.fillText(i, tmpx, tmpy);
 	    
 	    // Hour tics
 
 	    ctx.beginPath();   
-	    ctx.moveTo(cx + (rad+4) * Math.cos(hour2rad(i, mode)), cy + (rad+4) * Math.sin(hour2rad(i, mode)));
+	    ctx.moveTo(cx + (rad*1.03) * Math.cos(hour2rad(i, mode)), cy + (rad*1.03) * Math.sin(hour2rad(i, mode)));
 	    ctx.lineTo(cx + rad * Math.cos(hour2rad(i, mode)), cy + rad * Math.sin(hour2rad(i, mode)));
 	    ctx.strokeStyle = "rgba(90,90,90,0.7)";
 	    ctx.stroke();
@@ -314,23 +321,30 @@ function draw() {
 	
 	// Show sunrise/sunset ticker	
 	ctx.textAlign = "left";
-	ctx.font = "10pt Arial";
-	if (! http_param('lat'))
-	    ctx.fillText(location_name + " " + d.toTimeString(), 10, 15);
-	else
-	    ctx.fillText(location_name + " " + d.toUTCString(), 10, 15);
-	ctx.font = "bold 14pt Arial";
-	if (riseHour == 0 && setHour == 0 && latitude > polar_latitude)
-	    ctx.fillText("kaamos", 10, 35);
-	else if (riseHour == 0 && setHour == 0 && latitude < -polar_latitude)
-	    ctx.fillText("yötön yö", 10, 35);
-	else if (hourNow < riseHour)
-	    ctx.fillText("sunrise in " + timeremaining(riseHour-hourNow), 10, 35);
-	else if (hourNow < setHour)
-	    ctx.fillText("sunset in " + timeremaining(setHour-hourNow), 10, 35);
-	else if (hourNow > setHour)
-	    ctx.fillText("sunrise in " + timeremaining(riseHour+(24-hourNow)), 10, 35);
 
+	var time;
+	var title;
+	if (! http_param('lat'))
+	    time = location_name + " " + d.toTimeString();
+	else
+	    time = location_name + " " + d.toUTCString();
+
+
+	if (riseHour == 0 && setHour == 0 && latitude > polar_latitude)
+	    title = "polar night";
+	else if (riseHour == 0 && setHour == 0 && latitude < -polar_latitude)
+	    title = "midnight sun";
+	else if (hourNow < riseHour)
+	    title = "sunrise in " + timeremaining(riseHour-hourNow);
+	else if (hourNow < setHour)
+	    title = "sunset in " + timeremaining(setHour-hourNow);
+	else if (hourNow > setHour)
+	    title = "sunrise in " + timeremaining(riseHour+(24-hourNow));
+
+	ctx.font = w*0.016 + "pt Arial";
+	ctx.fillText(time, 0.02*w, 0.03*h);
+	ctx.font = "bold " + Math.floor(0.04*w) + "pt Arial";
+	ctx.fillText(title, 0.02*w, 0.09*h);
 
 	if (! (riseHour == 0 && setHour == 0)) {
 	    ctx.textAlign = "center";
@@ -341,8 +355,8 @@ function draw() {
 		ctx.font = fontsize + "pt Arial";
 	    
 	    
-	    ctx.fillText("sunset", cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
-	    ctx.fillText("at " + hourstr(setHour), cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
+	    ctx.fillText("sunset", cx+(rad*1.35)*Math.cos(hour2rad(setHour,mode)), cy+(rad*1.35)*Math.sin(hour2rad(setHour,mode)));
+	    ctx.fillText("at " + hourstr(setHour), cx+(rad*1.35)*Math.cos(hour2rad(setHour,mode)), w*0.03+cy+(rad*1.35)*Math.sin(hour2rad(setHour,mode)));
 	    
 	    
 	    if (hourNow < riseHour || hourNow > setHour)
@@ -350,9 +364,10 @@ function draw() {
 	    else
 		ctx.font = fontsize + "pt Arial";
 	    
-	    ctx.fillText("sunrise", cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
-	    ctx.fillText("at " + hourstr(riseHour), cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
+	    
+	    ctx.fillText("sunrise", cx+(rad*1.35)*Math.cos(hour2rad(riseHour,mode)), cy+(rad*1.35)*Math.sin(hour2rad(riseHour,mode)));
+	    ctx.fillText("at " + hourstr(riseHour), cx+(rad*1.35)*Math.cos(hour2rad(riseHour,mode)), w*0.03+cy+(rad*1.35)*Math.sin(hour2rad(riseHour,mode)));
 	}	
-    }
+	//}
 }
 
