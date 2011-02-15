@@ -127,9 +127,10 @@ function draw() {
     
     //var myLocation = new SunriseSunset( 2011, 0, 9, 67.8, 27);
 
+    var polar_latitude = 66;
 
-    var longitude = http_param('lat');
-    var latitude = http_param('lon');
+    var longitude = parseFloat(http_param('lon'));
+    var latitude = parseFloat(http_param('lat'));
     var location_name = '';
     
     // Check for lat/long coordinates in URL parameters
@@ -161,9 +162,14 @@ function draw() {
     var nightLenH = Math.floor(night);
     var nightLenM = Math.round(60 * (night % 1));
     var nightLen = nightLenH + ":" + zeroPad(nightLenM, 2);
+    var nightLen = timeremaining(night);
     
     if (canvas.getContext) {
 	var ctx = canvas.getContext("2d");
+
+	//ctx.canvas.width  = window.innerWidth - 200;
+	//ctx.canvas.height = window.innerHeight -200;
+
 	ctx.font = "" + fontsize + "pt Arial";
 	ctx.lineWidth = linewidth;
 
@@ -191,8 +197,18 @@ function draw() {
 	if (mode == 12) {
 	    // 12 hour display, ante meridiem
 
+
+	    // Polar night (kaamos)
+	    if (riseHour == 0 && setHour == 0 && latitude > polar_latitude) {
+		drawSector(ctx, cx, cy, cNight, rad, 0, 2*Math.PI);
+	    }
+	    // Midnight sun (yötön yö)
+	    else if (riseHour == 0 && setHour == 0 && latitude < -polar_latitude) {
+		drawSector(ctx, cx, cy, cDay, rad, 0, 2*Math.PI);
+	    }
+
 	    // Sun down
-	    if ((hourNow < riseHour) || (hourNow > setHour)) {
+	    else if ((hourNow < riseHour) || (hourNow > setHour)) {
 		drawSector(ctx, cx, cy, cDay, rad, hour2rad(setHour, mode), hour2rad(riseHour, mode));
 		drawSector(ctx, cx, cy, cNight, rad, hour2rad(riseHour, mode), hour2rad(setHour, mode));
 		drawSector(ctx, cx, cy, cNight, rad-10, hour2rad(riseHour, mode), hour2rad(0, mode));
@@ -214,7 +230,11 @@ function draw() {
 		    drawSector(ctx, cx, cy, cDay, rad-10, 0, 2*Math.PI);
 		}
 
+
+	    
+
 	    }
+
 
 	}
 	// 24 hour display
@@ -300,7 +320,11 @@ function draw() {
 	else
 	    ctx.fillText(location_name + " " + d.toUTCString(), 10, 15);
 	ctx.font = "bold 14pt Arial";
-	if (hourNow < riseHour)
+	if (riseHour == 0 && setHour == 0 && latitude > polar_latitude)
+	    ctx.fillText("kaamos", 10, 35);
+	else if (riseHour == 0 && setHour == 0 && latitude < -polar_latitude)
+	    ctx.fillText("yötön yö", 10, 35);
+	else if (hourNow < riseHour)
 	    ctx.fillText("sunrise in " + timeremaining(riseHour-hourNow), 10, 35);
 	else if (hourNow < setHour)
 	    ctx.fillText("sunset in " + timeremaining(setHour-hourNow), 10, 35);
@@ -308,25 +332,27 @@ function draw() {
 	    ctx.fillText("sunrise in " + timeremaining(riseHour+(24-hourNow)), 10, 35);
 
 
-	ctx.textAlign = "center";
-	
-	if (riseHour < hourNow && hourNow < setHour)
-	    ctx.font = "bold " + fontsize + "pt Arial";
-	else
-	    ctx.font = fontsize + "pt Arial";
-	
-	ctx.fillText("sunset", cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
-	ctx.fillText("at " + hourstr(setHour), cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
-	
-	
-	if (hourNow < riseHour || hourNow > setHour)
-	    ctx.font = "bold " + fontsize + "pt Arial";
-	else
-	    ctx.font = fontsize + "pt Arial";
-	
-	ctx.fillText("sunrise", cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
-	ctx.fillText("at " + hourstr(riseHour), cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
-	
+	if (! (riseHour == 0 && setHour == 0)) {
+	    ctx.textAlign = "center";
+	    
+	    if (riseHour < hourNow && hourNow < setHour)
+		ctx.font = "bold " + fontsize + "pt Arial";
+	    else
+		ctx.font = fontsize + "pt Arial";
+	    
+	    
+	    ctx.fillText("sunset", cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
+	    ctx.fillText("at " + hourstr(setHour), cx+(rad*1.4)*Math.cos(hour2rad(setHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(setHour,mode)));
+	    
+	    
+	    if (hourNow < riseHour || hourNow > setHour)
+		ctx.font = "bold " + fontsize + "pt Arial";
+	    else
+		ctx.font = fontsize + "pt Arial";
+	    
+	    ctx.fillText("sunrise", cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
+	    ctx.fillText("at " + hourstr(riseHour), cx+(rad*1.4)*Math.cos(hour2rad(riseHour,mode)), 12+cy+(rad*1.4)*Math.sin(hour2rad(riseHour,mode)));
+	}	
     }
 }
 
