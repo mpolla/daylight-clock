@@ -17,6 +17,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var mode = 12;
+var latitude;
+var longitude;
+var location_name;
+var myLocation;
+var riseHour;
+var setHour;
+var hourNow;
+var d;
+var offset;
 
 // Transform floating point hours (0.00 ... 23.99)
 // into radians (-PI/4 ... + 3*PI/4)
@@ -43,6 +52,32 @@ function dom24h() {
 }
 
 function init() {
+    d = new Date(2010, 5, 21, 23, 37, 33, 123);
+    //d = new Date();
+
+    longitude = parseFloat(http_param('lon'));
+    latitude = parseFloat(http_param('lat'));
+    location_name = '';
+ 
+    offset = -d.getTimezoneOffset() / 60;
+
+    // Check for lat/long coordinates in URL parameters
+    if (! http_param('lat') && ! http_param('long')) {
+	geoIP();
+    }
+    else
+	location_name = coordstr(latitude,longitude);
+
+    myLocation = new SunriseSunset( d.getFullYear(), 
+					d.getMonth()+1, 
+					d.getDate()+1, 
+					latitude, 
+					longitude);
+    
+    riseHour = myLocation.sunriseLocalHours(offset);
+    setHour = myLocation.sunsetLocalHours(offset);
+
+    geoIP();
     setInterval("draw();", 1000);
 }
 
@@ -57,7 +92,8 @@ function zeroPad( number, width) {
 // Transform floating point value into hour representation
 // e.g. 16.82 --> "16:49"
 function hourstr(hour) {
-    return "" + Math.floor(hour) + ":" + zeroPad(Math.round(60 * (hour % 1)), 2);
+    return "" + Math.floor(hour) + ":" + 
+	zeroPad(Math.round(60 * (hour % 1)), 2);
 }
 
 // Draw sector
@@ -105,11 +141,66 @@ function http_param( param) {
 	return results[1];
 }
 
+function coordstr(lat,lon) {
+    var latstr = "N";
+    var lonstr = "W";
+
+    if (lat < 0) {
+	lat = -lat;
+	latstr = "S";
+    }
+
+    if (lon > 180) {
+	lon -= 180;
+	lonstr = "E";
+    }
+
+    if (lon < 0) {
+	lon = -lon;
+	lonstr = "E";
+    }
+
+    return lat.toPrecision(4) + "° " + latstr + ", " + lon.toPrecision(4) + "° " + lonstr;
+}
+
+
+
+function dayLength(date, riseHour, setHour) {
+    return setHour - riseHour;
+}
+
+function nightLength(date, riseHour, setHour) {
+    return 24.0 - dayLength(date, riseHour, setHour);
+}
+
+function sunUp(hourNow, riseHour, setHour) {
+    if (hourNow < riseHour || hourNow > setHour)
+	return false;
+    return true
+}
+
+function sunDown(hourNow, riseHour, setHour) {
+    if (sunUp(hourNow, riseHour, setHour))
+	return false;
+    return true;
+}
+
+function geoIP() {
+    
+    try {
+	latitude = geoip_latitude();
+	longitude = geoip_longitude();
+	location_name = geoip_city() + "/" + geoip_country_name();
+    }
+    catch (exception) {
+	longitude = 0;
+	latitude = 0;
+	location_name = "Unknown location";
+    }
+}
+
 // Draw clock
 function draw() {
-    
-    //var d = new Date(2010, 5, 21, 4, 37, 33, 123);
-    var d = new Date();
     
     var cNight = "rgba(0,0,90,1)";
     var cNightL = "rgba(40,40,120,1)";
@@ -123,39 +214,24 @@ function draw() {
     ctx.canvas.width  = window.innerWidth - 20;
     ctx.canvas.height = window.innerHeight -10;
     
-    var w = Math.min(ctx.canvas.width, ctx.canvas.height);
-    var h = Math.min(ctx.canvas.width, ctx.canvas.height);
-    var h = w*1.1;
+    var w = ctx.canvas.width;
+    var h = ctx.canvas.height;
 
-    var fontsize = 0.02*w;
-    var cx = w/2;
-    var cy = h*0.5;
-    var rad = w*0.27;
-    var trad = rad*1.1;
-    var offset = -d.getTimezoneOffset() / 60;
-    
+    // Layout scaling
+    var scale = 0.8*Math.min(w,h) + 0.2*Math.max(w,h);
+    var fontsize = 0.02 * scale;
+    var fontsize_title = 0.03 * scale;
+    var fontsize_time = 0.018 * scale;
+    var cx = .5 * w;
+    var cy = .56 * h;
+    var rad = 0.28 * scale;
+    var trad = 1.15 * rad;
+    var rad_label = 1.4 * rad;
+
     //var myLocation = new SunriseSunset( 2011, 0, 9, 67.8, 27);
 
     var polar_latitude = 66;
 
-    var longitude = parseFloat(http_param('lon'));
-    var latitude = parseFloat(http_param('lat'));
-    var location_name = '';
-    
-    // Check for lat/long coordinates in URL parameters
-    if (! http_param('lat') && ! http_param('long')) {
-	latitude = geoip_latitude();
-	longitude = geoip_longitude();
-	location_name = geoip_city() + "/" + geoip_country_name();
-    }
-    else {
-	location_name = latitude + "° lat, " + longitude + "° lon";    
-    }
-
-    var myLocation = new SunriseSunset( d.getFullYear(), d.getMonth()+1, d.getDate()+1, latitude, longitude);
-    
-    var riseHour = myLocation.sunriseLocalHours(offset);
-    var setHour = myLocation.sunsetLocalHours(offset);
     
     // Solstice workaround
     if (isNaN(riseHour))
@@ -167,7 +243,7 @@ function draw() {
     var nightLen = hourstr(24.0 - (setHour - riseHour));
 
     ctx.font = "" + Math.floor(0.05*h) + "pt Arial";
-    ctx.lineWidth = w*0.018;
+    ctx.lineWidth = scale*0.018;
     
     // background
     ctx.fillStyle = "rgb(255, 255, 255)";
@@ -179,12 +255,9 @@ function draw() {
     else
 	hourNow = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
 
-
-
-
     // Print hour tics
     ctx.fillStyle = cText;
-    ctx.font = w*0.02 + "pt Arial";
+    ctx.font = scale*0.02 + "pt Arial";
     ctx.textAlign = "center";
     var start = 1;
     var end = 24;
@@ -196,7 +269,7 @@ function draw() {
     }
     for (i=start; i<=end; i++) {
 	var tmpx = cx + trad * Math.cos(hour2rad(i, mode));
-	var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + w*0.01;
+	var tmpy = cy + trad * Math.sin(hour2rad(i, mode)) + scale*0.01;
 	if (i%3==0)
 	    ctx.fillText(i, tmpx, tmpy);
 	
@@ -212,8 +285,6 @@ function draw() {
     
     
     if (mode == 12) {
-	// 12 hour display, ante meridiem
-	
 	// Polar night (kaamos)
 	if (riseHour == 0 && setHour == 0 && latitude > polar_latitude) {
 	    drawSector( cx, cy, cNight, rad, 0, 2*Math.PI);
@@ -225,16 +296,23 @@ function draw() {
 	
 	// Sun down
 	else if ((hourNow < riseHour) || (hourNow > setHour)) {
-	    drawSector( cx, cy, cDay, rad, hour2rad(setHour, mode), hour2rad(riseHour, mode));
-	    drawSector( cx, cy, cNight, rad, hour2rad(riseHour, mode), hour2rad(setHour, mode));
-	    drawSector( cx, cy, cNight, rad*0.9, hour2rad(riseHour, mode), hour2rad(0, mode));
-	    drawSector( cx, cy, cNight, rad*0.9, hour2rad(0, mode), hour2rad(setHour, mode));
+
+	    if ((setHour - riseHour) > 12) {
+		drawSector( cx, cy, cDay, rad, 0, 2*Math.PI); // day around the clock coming
+		drawSector( cx, cy, cNight, rad*0.9, hour2rad(riseHour, mode), hour2rad(setHour, mode));
+	    }
+	    else {
+		drawSector( cx, cy, cNight, rad, hour2rad(riseHour, mode), hour2rad(setHour, mode));
+		drawSector( cx, cy, cDay, rad, hour2rad(setHour, mode), hour2rad(riseHour, mode));
+		drawSector( cx, cy, cNight, rad*0.9, 0, 2*Math.PI); // night around the clock now
+	    }
+
 	}
 	// Sun up
 	else {
 	    
 	    if ((setHour - riseHour) < 12) {
-		drawSector( cx, cy, cNight, rad, 0, 2*Math.PI);
+		drawSector( cx, cy, cNight, rad, 0, 2*Math.PI); // night around the clock coming
 		drawSector( cx, cy, cNight, rad*0.9, 0, 2*Math.PI);
 		drawSector( cx, cy, cDay, rad*0.9, hour2rad(hourNow, mode), hour2rad(riseHour, mode));
 		drawSector( cx, cy, cDay, rad*0.9, hour2rad(setHour, mode), hour2rad(hourNow, mode));
@@ -242,7 +320,7 @@ function draw() {
 	    else {
 		drawSector( cx, cy, cNight, rad, hour2rad(riseHour,mode), hour2rad(setHour,mode));
 		drawSector( cx, cy, cDay, rad, hour2rad(setHour,mode), hour2rad(riseHour,mode));
-		drawSector( cx, cy, cDay, rad*0.9, 0, 2*Math.PI);
+		drawSector( cx, cy, cDay, rad*0.9, 0, 2*Math.PI); // day around the clock now
 	    }
 	}
 	
@@ -265,9 +343,11 @@ function draw() {
     
     // Print day and night length
     var tmprad;
+    var tmpHour = hourNow % 12;
+
     if (mode == 12) {
-	tmpRad = - Math.PI + hour2rad(0.5*(setHour+riseHour), mode);
-	if (hourNow < setHour)
+	tmpRad = Math.PI + 0.5 * (hour2rad(riseHour,mode) + hour2rad(tmpHour,mode));
+	if ((dayLength(d, riseHour, setHour) > 12 && sunDown(hourNow, riseHour, setHour)) || (nightLength(d, riseHour, setHour) > 12 && sunUp(hourNow, riseHour, setHour)))
 	    tmpRad += Math.PI;
     }
     else
@@ -279,20 +359,22 @@ function draw() {
     var nly = cy + (trad *.5) * Math.sin(tmpRad + Math.PI);
     
     ctx.textAlign = "center";
-    // display day length if sun is up and night is long
+
     if ( mode == 12 && (hourNow < riseHour || hourNow > setHour) && (24-setHour+riseHour)>12) {}
+    // hide day length only if sun down and night runs around the clock
     else {
 	ctx.fillStyle = cNightL;
-	ctx.font = "bold "+w*0.02+"pt Arial";
-	ctx.fillText("day length", dlx, dly-w*0.02);
-	ctx.fillText(dayLen, dlx, dly+w*0.02);
+	ctx.font = "bold "+scale*0.02+"pt Arial";
+	ctx.fillText("day length", dlx, dly-scale*0.02);
+	ctx.fillText(dayLen, dlx, dly+scale*0.02);
     }
     if ( mode == 12 && (hourNow > riseHour && hourNow < setHour) && (setHour-riseHour)>12 ) {}
+    // hide night length only if sun up and day runs around the clock
     else {
 	ctx.fillStyle = cDayL;
-	ctx.font = "bold "+w*0.02+"pt Arial";
-	ctx.fillText("night length", nlx, nly-w*0.02);
-	ctx.fillText(nightLen, nlx, nly+w*0.02);
+	ctx.font = "bold "+scale*0.02+"pt Arial";
+	ctx.fillText("night length", nlx, nly-scale*0.02);
+	ctx.fillText(nightLen, nlx, nly+scale*0.02);
     }
     
     // Show sunrise/sunset ticker	
@@ -304,7 +386,6 @@ function draw() {
 	time = location_name + " " + d.toTimeString();
     else
 	time = location_name + " " + d.toUTCString();
-    
     
     if (riseHour == 0 && setHour == 0 && latitude > polar_latitude)
 	title = "polar night";
@@ -318,12 +399,14 @@ function draw() {
 	title = "sunrise in " + timeremaining(riseHour+(24-hourNow));
 
     ctx.fillStyle = "rgba(80,80,80,0.7)";
-    ctx.font = w*0.016 + "pt Arial";
+    ctx.font = fontsize_time + "pt Arial";
     ctx.fillText(time, 0.03*w, 0.04*h);
-    ctx.font = "bold " + Math.floor(0.04*w) + "pt Arial";
+    ctx.font = "bold " + Math.floor(0.04*scale) + "pt Arial";
     ctx.fillText(title, 0.03*w, 0.11*h);
-    
-    if (! (riseHour == 0 && setHour == 0)) {
+
+    // Print sunrise/sunset time labels
+    if (riseHour == 0 && setHour == 0) {}
+    else {
 	ctx.textAlign = "center";
 	
 	if (riseHour < hourNow && hourNow < setHour)
@@ -331,13 +414,12 @@ function draw() {
 	else
 	    ctx.font = fontsize + "pt Arial";
 	
-	
 	ctx.fillText("sunset", 
-		     cx+(rad*1.35)*Math.cos(hour2rad(setHour,mode)), 
-		     cy+(rad*1.35)*Math.sin(hour2rad(setHour,mode)));
+		     cx+rad_label*Math.cos(hour2rad(setHour,mode)), 
+		     cy+rad_label*Math.sin(hour2rad(setHour,mode)));
 	ctx.fillText("at " + hourstr(setHour), 
-		     cx+(rad*1.35)*Math.cos(hour2rad(setHour,mode)), 
-		     w*0.03+cy+(rad*1.35)*Math.sin(hour2rad(setHour,mode)));
+		     cx+rad_label*Math.cos(hour2rad(setHour,mode)), 
+		     scale*0.03+cy+rad_label*Math.sin(hour2rad(setHour,mode)));
 	
 	
 	if (hourNow < riseHour || hourNow > setHour)
@@ -346,11 +428,11 @@ function draw() {
 	    ctx.font = fontsize + "pt Arial";
 	
 	ctx.fillText("sunrise", 
-		     cx+(rad*1.35)*Math.cos(hour2rad(riseHour,mode)), 
-		     cy+(rad*1.35)*Math.sin(hour2rad(riseHour,mode)));
+		     cx+rad_label*Math.cos(hour2rad(riseHour,mode)), 
+		     cy+rad_label*Math.sin(hour2rad(riseHour,mode)));
 	ctx.fillText("at " + hourstr(riseHour), 
-		     cx+(rad*1.35)*Math.cos(hour2rad(riseHour,mode)), 
-		     w*0.03+cy+(rad*1.35)*Math.sin(hour2rad(riseHour,mode)));
+		     cx+rad_label*Math.cos(hour2rad(riseHour,mode)), 
+		     scale*0.03+cy+rad_label*Math.sin(hour2rad(riseHour,mode)));
     }
 }
 
