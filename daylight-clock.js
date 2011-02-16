@@ -52,8 +52,8 @@ function dom24h() {
 }
 
 function init() {
-    d = new Date(2010, 5, 21, 23, 37, 33, 123);
-    //d = new Date();
+    //d = new Date(2010, 5, 21, 4, 37, 33, 123);
+    d = new Date();
 
     longitude = parseFloat(http_param('lon'));
     latitude = parseFloat(http_param('lat'));
@@ -343,11 +343,9 @@ function draw() {
     
     // Print day and night length
     var tmprad;
-    var tmpHour = hourNow % 12;
-
     if (mode == 12) {
-	tmpRad = Math.PI + 0.5 * (hour2rad(riseHour,mode) + hour2rad(tmpHour,mode));
-	if ((dayLength(d, riseHour, setHour) > 12 && sunDown(hourNow, riseHour, setHour)) || (nightLength(d, riseHour, setHour) > 12 && sunUp(hourNow, riseHour, setHour)))
+	tmpRad = hour2rad(riseHour + 0.5*(setHour-riseHour),mode);
+	if (hourNow < riseHour || hourNow > setHour)
 	    tmpRad += Math.PI;
     }
     else
@@ -435,4 +433,3 @@ function draw() {
 		     scale*0.03+cy+rad_label*Math.sin(hour2rad(riseHour,mode)));
     }
 }
-
