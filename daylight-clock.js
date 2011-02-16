@@ -75,12 +75,7 @@ function DaylightClock() {
     this.init = function() {
 	//d = new Date(2010, 5, 21, 4, 37, 33, 123);
 	this.d = new Date();
-
 	this.offset = -this.d.getTimezoneOffset() / 60;
-
-
-
-	var d = new Date();
 
 	this.location_name = '';
 	this.longitude = parseFloat(this.http_param('lon'));
@@ -90,32 +85,23 @@ function DaylightClock() {
 	    this.geoIP();
 	else
 	    this.location_name = this.coordstr(latitude,longitude);
+	
+	this.canvas = document.getElementById("daylightometer");
+	this.ctx = this.canvas.getContext("2d");
+	this.update();
+    }
+    
+    this.update = function() {
 
-	alert(this.latitude);
-
-	this.sunriseSunset = new SunriseSunset( d.getFullYear(), 
-						 d.getMonth()+1, 
-						 d.getDate()+1, 
+	this.d = new Date();
+	this.sunriseSunset = new SunriseSunset( this.d.getFullYear(), 
+						 this.d.getMonth()+1, 
+						 this.d.getDate()+1, 
 						 this.latitude, 
 						 this.longitude);
 	
 	this.riseHour = this.sunriseSunset.sunriseLocalHours(this.offset);
 	this.setHour = this.sunriseSunset.sunsetLocalHours(this.offset);	
-
-
-
-
-
-
-	
-	
-	
-	this.canvas = document.getElementById("daylightometer");
-	this.ctx = this.canvas.getContext("2d");
-    }
-    
-    this.update = function() {
-	
 	this.draw()
     }
 
@@ -240,9 +226,6 @@ function DaylightClock() {
 	var cDayL = "rgba(140,140,200,1)";
 	var cText = "rgba(100,100,100,0.9)";
 	
-	//var canvas = document.getElementById("daylightometer");
-	//var ctx = canvas.getContext("2d");
-	
 	this.ctx.canvas.width  = window.innerWidth - 20;
 	this.ctx.canvas.height = window.innerHeight -10;
 	
@@ -259,9 +242,6 @@ function DaylightClock() {
 	var rad = 0.28 * scale;
 	var trad = 1.15 * rad;
 	var rad_label = 1.4 * rad;
-	
-	//var myLocation = new SunriseSunset( 2011, 0, 9, 67.8, 27);
-	
 	var polar_latitude = 66;
 	
 	// Solstice workaround
@@ -281,10 +261,10 @@ function DaylightClock() {
 	this.ctx.fillRect(0, 0, w, h);
 	
 	// current time in decimal hours (0.00 ... 23.99)
-	if (! this.http_param('lat') && ! this.http_param('lon'))
-	    hourNow = this.d.getHours() + this.d.getMinutes()/60 + this.d.getSeconds()/3600;
-	else
+	if (this.http_param('lat') && this.http_param('lon'))
 	    hourNow = this.d.getUTCHours() + this.d.getUTCMinutes()/60 + this.d.getUTCSeconds()/3600;
+	else
+	    hourNow = this.d.getHours() + this.d.getMinutes()/60 + this.d.getSeconds()/3600;
 	
 	// Print hour tics
 	this.ctx.fillStyle = cText;
