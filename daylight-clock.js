@@ -44,7 +44,7 @@ window.onresize = function(event) {
 function dom12h() {
     dc.setMode(12);
     dc.init()
-    setInterval("dc.update()", 1000);
+    setInterval("dc.update()", 50);
 }
 
 // 24 hour format
@@ -131,7 +131,7 @@ function DaylightClock() {
 	if (! this.http_param('lat') && ! this.http_param('long'))
 	    this.geoIP();
 	else
-	    this.location_name = this.coordstr(latitude,longitude);
+	    this.location_name = this.coordstr(this.latitude, this.longitude);
 	this.update();
     }
 
@@ -166,16 +166,51 @@ function DaylightClock() {
     
     // Update time and sunset/sunrise information and redraw.  
     this.update = function() {
-	
+
 	this.d = new Date();
+	var dt = new Date(this.d.getTime() + 1000*60*60*24);
+
+	this.offset = -this.d.getTimezoneOffset() / 60;
+
+	// current time in decimal hours (0.00 ... 23.99)
+	if (this.http_param('lat') && this.http_param('lon'))
+	    this.hourNow = this.d.getUTCHours() + this.d.getUTCMinutes()/60 + this.d.getUTCSeconds()/3600;
+	else
+	    this.hourNow = this.d.getHours() + this.d.getMinutes()/60 + this.d.getSeconds()/3600;
+	
+
+
 	this.ss = new SunriseSunset(this.d.getFullYear(), 
 					       this.d.getMonth()+1, 
 					       this.d.getDate()+1, 
 					       this.latitude, 
 					       this.longitude);
-	
-	this.riseHour = this.ss.sunriseLocalHours(this.offset);
-	this.setHour = this.ss.sunsetLocalHours(this.offset);	
+
+	this.sst = new SunriseSunset(dt.getFullYear(), 
+				     dt.getMonth()+1, 
+				     dt.getDate()+1, 
+				     this.latitude, 
+				     this.longitude);
+
+	var rh, sh, rht, sht;
+
+	if (this.http_param('lat') && this.http_param('lon')) {
+	    rh = this.ss.sunriseUtcHours(this.offset);
+	    sh = this.ss.sunsetUtcHours(this.offset);
+	    rht = this.sst.sunriseUtcHours(this.offset);
+	    sht = this.sst.sunsetUtcHours(this.offset);
+	}
+	else {
+	    rh = this.ss.sunriseLocalHours(this.offset);
+	    sh = this.ss.sunsetLocalHours(this.offset);
+	    rht = this.sst.sunriseLocalHours(this.offset);
+	    sht = this.sst.sunsetLocalHours(this.offset);
+
+	}
+
+	this.hourNow > rh ? this.riseHour = rht : this.riseHour = rh;
+	this.hourNow > sh ? this.setHour = sht : this.setHour = sh;
+
 	this.draw()
     }
 
@@ -255,21 +290,54 @@ function DaylightClock() {
     }
     
     this.dayLength = function() {
+	if (this.polarNight())
+	    return .0;
+	else if (this.midnightSun())
+	    return 24.0
 	return this.setHour - this.riseHour;
     }
     
     this.nightLength = function() {
+	if (this.polarNight())
+	    return 24.0;
+	else if (this.midnightSun())
+	    return .0
 	return 24.0 - this.dayLength();
     }
     
-    function sunUp() {
-	if (this.hourNow < this.riseHour || this.hourNow > this.setHour)
+    this.sunUp = function() {
+	if (this.riseHour < this.hourNow && this.hourNow < this.setHour)
+	    return true;
+	else
 	    return false;
-	return true;
     }
     
-    function sunDown() {
-	return (! sunUp());
+    this.polarNight = function() {
+	if (this.riseHour == 0 && this.setHour == 0) {
+	    // Northern polar region
+	    if (Math.abs(this.d.getMonth()+1 - 6) > 3 && this.latitude > this.polar_latitude) {
+		return true;
+	    }
+	    // Southern polar region
+	    else if (Math.abs(this.d.getMonth()+1 - 6) < 3 && this.latitude < -this.polar_latitude) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    this.midnightSun = function() {
+	if (this.riseHour == 0 && this.setHour == 0) {
+	    // Northern polar region
+	    if (Math.abs(this.d.getMonth()+1 - 6) < 3 && this.latitude > this.polar_latitude) {
+		return true;
+	    }
+	    // Southern polar region
+	    else if (Math.abs(this.d.getMonth()+1 - 6) > 3 && this.latitude < -this.polar_latitude) {
+		return true;
+	    }
+	}
+	return false;
     }
     
     this.geoIP = function() {
@@ -288,6 +356,8 @@ function DaylightClock() {
     
     // Draw clock
     this.draw = function() {
+
+
 	
 	// Solstice workaround
 	if (isNaN(this.riseHour))
@@ -295,21 +365,12 @@ function DaylightClock() {
 	if (isNaN(this.setHour))
 	    this.setHour = 0.00;
 	
-	var dayLen = this.hourstr(this.setHour - this.riseHour);
-	var nightLen = this.hourstr(24.0 - (this.setHour - this.riseHour));
-	
 	this.ctx.font = "" + Math.floor(0.05*this.scale) + "pt " + this.fontFamily;
 	this.ctx.lineWidth = this.scale*0.018;
 	
 	// background
 	this.ctx.fillStyle = this.cBackground;
 	this.ctx.fillRect(0, 0, this.w, this.h);
-	
-	// current time in decimal hours (0.00 ... 23.99)
-	if (this.http_param('lat') && this.http_param('lon'))
-	    this.hourNow = this.d.getUTCHours() + this.d.getUTCMinutes()/60 + this.d.getUTCSeconds()/3600;
-	else
-	    this.hourNow = this.d.getHours() + this.d.getMinutes()/60 + this.d.getSeconds()/3600;
 	
 	// Print hour tics
 	this.ctx.fillStyle = this.cText;
@@ -343,14 +404,14 @@ function DaylightClock() {
     
 	if (this.mode == 12) {
 	    // Polar night (kaamos)
-	    if (this.riseHour == 0 && this.setHour == 0 && latitude > polar_latitude) {
+	    if (this.polarNight()) {
 		this.drawSector(this.cNight, this.rad, 0, 2 * Math.PI);
 	    }
-	    // Midnight sun (yötön yö)
-	    else if (this.riseHour == 0 && this.setHour == 0 && latitude < -polar_latitude) {
+	    // Midnight sun(yötön yö)
+	    else if (this.midnightSun()) {
 		this.drawSector(this.cDay, this.rad, 0, 2 * Math.PI);
 	    }
-	    else if (sunDown()) {
+	    else if (! this.sunUp()) {
 
 		if (this.dayLength() > 12) {
 		    this.drawSector(this.cDay, this.rad, 0, 2 * Math.PI); // day around the clock coming
@@ -432,21 +493,22 @@ function DaylightClock() {
     
 	this.ctx.textAlign = "center";
 
-	if ( this.mode == 12 && (this.hourNow < this.riseHour || this.hourNow > this.setHour) && (24-this.setHour+this.riseHour)>12) {}
+	if (this.mode == 12 && ! this.sunUp() && this.nightLength() > 12) {}
 	// hide day length only if sun down and night runs around the clock
 	else {
 	    this.ctx.fillStyle = this.cNightL;
 	    this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
 	    this.ctx.fillText("day length", dlx, dly - this.innerLabelLineHeight);
-	    this.ctx.fillText(dayLen, dlx, dly + this.innerLabelLineHeight);
+	    this.ctx.fillText(this.hourstr(this.dayLength()), dlx, dly + this.innerLabelLineHeight);
 	}
-	if ( this.mode == 12 && (this.hourNow > this.riseHour && this.hourNow < this.setHour) && (this.setHour-this.riseHour)>12 ) {}
+
+	if ( this.mode == 12 && this.sunUp() && this.dayLength() > 12) {}
 	// hide night length only if sun up and day runs around the clock
 	else {
 	    this.ctx.fillStyle = this.cDayL;
 	    this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
 	    this.ctx.fillText("night length", nlx, nly - this.innerLabelLineHeight);
-	    this.ctx.fillText(nightLen, nlx, nly + this.innerLabelLineHeight);
+	    this.ctx.fillText(this.hourstr(this.nightLength()), nlx, nly + this.innerLabelLineHeight);
 	}
     
 	// Show sunrise/sunset ticker	
@@ -459,9 +521,9 @@ function DaylightClock() {
 	else
 	    time = this.location_name + " " + this.d.toUTCString();
 	
-	if (this.riseHour == 0 && this.setHour == 0 && latitude > polar_latitude)
+	if (this.riseHour == 0 && this.setHour == 0 && this.latitude > this.polar_latitude)
 	    title = "polar night";
-	else if (this.riseHour == 0 && this.setHour == 0 && latitude < -polar_latitude)
+	else if (this.riseHour == 0 && this.setHour == 0 && this.latitude < -this.polar_latitude)
 	    title = "midnight sun";
 	else if (this.hourNow < this.riseHour)
 	    title = "sunrise in " + this.timeremaining(this.riseHour-this.hourNow);
@@ -475,7 +537,7 @@ function DaylightClock() {
 	this.ctx.fillText(time, this.timeStrX, this.timeStrY);
 	this.ctx.font = "bold " + this.titleFontSize + "pt " + this.fontFamily;
 	this.ctx.fillText(title, this.titleStrX, this.titleStrY);
-	
+
 	// Print sunrise/sunset time labels
 	if (this.riseHour == 0 && this.setHour == 0) {}
 	else {
