@@ -41,17 +41,17 @@ window.onresize = function(event) {
 };
 
 // 12 hour format
-function dom12h() {
+(function dom12h() {
     dc.setMode(12);
     dc.init();
-    setInterval(dc.update(), 1000);
-}
+    setInterval("dc.update()", 1000);
+})();
 
 // 24 hour format
 function dom24h() {
     dc.setMode(24);
     dc.init();
-    setInterval(dc.update(), 1000);
+    setInterval("dc.update()", 1000);
 }
 
 // Left zero-pad numbers
@@ -126,10 +126,10 @@ function DaylightClock() {
 	// Find out where we are, either by HTTP parameters
 	// or a geoIP query.  
 	this.location_name = '';
-	this.longitude = parseFloat(this.http_param('lon'));
-	this.latitude = parseFloat(this.http_param('lat'));
+	this.longitude = parseFloat(this.httpParam('lon'));
+	this.latitude = parseFloat(this.httpParam('lat'));
 	// Check for lat/long coordinates in URL parameters
-	if (! this.http_param('lat') && ! this.http_param('long')) {
+	if (! this.httpParam('lat') && ! this.httpParam('long')) {
 	    this.geoIP();
 	}
 	else {
@@ -177,7 +177,7 @@ function DaylightClock() {
 	this.offset = -this.d.getTimezoneOffset() / 60;
 
 	// current time in decimal hours (0.00 ... 23.99)
-	if (this.http_param('lat') && this.http_param('lon')) {
+	if (this.httpParam('lat') && this.httpParam('lon')) {
 	    this.hourNow = this.d.getUTCHours() + this.d.getUTCMinutes()/60 + this.d.getUTCSeconds()/3600;
 	}
 	else {
@@ -198,7 +198,7 @@ function DaylightClock() {
 
 	var rh, sh, rht, sht;
 
-	if (this.http_param('lat') && this.http_param('lon')) {
+	if (this.httpParam('lat') && this.httpParam('lon')) {
 	    rh = this.ss.sunriseUtcHours(this.offset);
 	    sh = this.ss.sunsetUtcHours(this.offset);
 	    rht = this.sst.sunriseUtcHours(this.offset);
@@ -263,7 +263,7 @@ function DaylightClock() {
     
     // Adapted from 
     // http://www.netlobo.com/url_query_string_javascript.html
-    this.http_param = function( param) {
+    this.httpParam = function(param) {
 	param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
 	var regexS = "[\\?&]" + param + "=([^&#]*)";
 	var regex = new RegExp(regexS);
@@ -544,7 +544,7 @@ function DaylightClock() {
 
 	// Use UTC time when coordinates are given explicitly and
 	// localtime when detecting location using geoIP.  
-	if (! this.http_param('lat') && this.http_param('lon')) {
+	if (! this.httpParam('lat') && this.httpParam('lon')) {
 	    time = this.location_name + " " + this.d.toTimeString();
 	}
 	else {
