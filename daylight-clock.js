@@ -38,12 +38,12 @@ window.onresize = function(event) {
     dc = new DaylightClock();
     dc.setMode(tmpMode);
     dc.init();
-}
+};
 
 // 12 hour format
 function dom12h() {
     dc.setMode(12);
-    dc.init()
+    dc.init();
     setInterval("dc.update()", 50);
 }
 
@@ -57,8 +57,9 @@ function dom24h() {
 // Left zero-pad numbers
 function zeroPad( number, width) {
     width -= number.toString().length;
-    if ( width > 0 )
+    if ( width > 0 ) {
 	return new Array(width + (/\./.test( number ) ? 2 : 1)).join('0') + number;
+    }
     return number;
 }
 
@@ -86,20 +87,20 @@ function DaylightClock() {
     this.h = this.ctx.canvas.height;
 
     // Layout scaling
-    this.scale = .8 * Math.min(this.w, this.h) + .2 * Math.max(this.w, this.h);
+    this.scale = 0.8 * Math.min(this.w, this.h) + 0.2 * Math.max(this.w, this.h);
 
-    this.rad = .28 * this.scale;
+    this.rad = 0.28 * this.scale;
     this.innerRad = 0.9 * this.rad;
     this.trad = 1.15 * this.rad;
 
     this.polar_latitude = 66;
-    this.cx = .5 * this.w;
-    this.cy = .56 * this.h;
-    this.handLength = .97 * this.rad;
+    this.cx = 0.5 * this.w;
+    this.cy = 0.56 * this.h;
+    this.handLength = 0.97 * this.rad;
 
-    this.innerLabelRadius = .5 * this.rad;
-    this.innerLabelFontSize = .02 * this.scale;
-    this.innerLabelLineHeight = .02 * this.scale;
+    this.innerLabelRadius = 0.5 * this.rad;
+    this.innerLabelFontSize = 0.02 * this.scale;
+    this.innerLabelLineHeight = 0.02 * this.scale;
 
     this.outerLabelRadius = 1.38 * this.rad;
     this.outerLabelFontSize = 0.02 * this.scale;
@@ -107,12 +108,12 @@ function DaylightClock() {
 
 
     this.titleFontSize = Math.floor(0.04 * this.scale);
-    this.timeFontSize = .018 * this.scale;
+    this.timeFontSize = 0.018 * this.scale;
     this.fontFamily = "Arial";
 
-    this.timeStrX = .03 * this.w;
+    this.timeStrX = 0.03 * this.w;
     this.timeStrY = 2.2 * this.timeFontSize;
-    this.titleStrX = .03 * this.w;
+    this.titleStrX = 0.03 * this.w;
     this.titleStrY = 2.8 * this.titleFontSize;
 
 
@@ -128,12 +129,14 @@ function DaylightClock() {
 	this.longitude = parseFloat(this.http_param('lon'));
 	this.latitude = parseFloat(this.http_param('lat'));
 	// Check for lat/long coordinates in URL parameters
-	if (! this.http_param('lat') && ! this.http_param('long'))
+	if (! this.http_param('lat') && ! this.http_param('long')) {
 	    this.geoIP();
-	else
+	}
+	else {
 	    this.location_name = this.coordstr(this.latitude, this.longitude);
+	}
 	this.update();
-    }
+    };
 
     this.resize = function() {
 	// Scale to fullscreen
@@ -141,28 +144,29 @@ function DaylightClock() {
 	this.ctx.canvas.height = window.innerHeight - 10;
 	this.w = this.ctx.canvas.width;
 	this.h = this.ctx.canvas.height;
-    }
+    };
     
     // Change display mode between 12H/24H display.  
     this.setMode = function(newmode) {
 	this.mode = newmode;
-    }
+    };
 
     // Get display mode.  
     this.getMode = function() {
 	return this.mode;
-    }
+    };
     
     // Transform floating point hours (0.00 ... 23.99)
     // into radians (-PI/4 ... + 3*PI/4)
     this.h2rad = function(hour) {
 	if (this.mode == 12) {
-	    if (12 <= hour)
+	    if (12 <= hour) {
 		hour = hour - 12;
+	    }
 	    return -Math.PI/2 + (hour / 12.0) * Math.PI * 2;
 	}
 	return -Math.PI/2 + (hour / 24.0) * Math.PI * 2;
-    }
+    };
     
     // Update time and sunset/sunrise information and redraw.  
     this.update = function() {
@@ -173,12 +177,12 @@ function DaylightClock() {
 	this.offset = -this.d.getTimezoneOffset() / 60;
 
 	// current time in decimal hours (0.00 ... 23.99)
-	if (this.http_param('lat') && this.http_param('lon'))
+	if (this.http_param('lat') && this.http_param('lon')) {
 	    this.hourNow = this.d.getUTCHours() + this.d.getUTCMinutes()/60 + this.d.getUTCSeconds()/3600;
-	else
+	}
+	else {
 	    this.hourNow = this.d.getHours() + this.d.getMinutes()/60 + this.d.getSeconds()/3600;
-	
-
+	}
 
 	this.ss = new SunriseSunset(this.d.getFullYear(), 
 					       this.d.getMonth()+1, 
@@ -211,15 +215,15 @@ function DaylightClock() {
 	this.hourNow > rh ? this.riseHour = rht : this.riseHour = rh;
 	this.hourNow > sh ? this.setHour = sht : this.setHour = sh;
 
-	this.draw()
-    }
+	this.draw();
+    };
 
     // Transform floating point value into hour representation
     // e.g. 16.82 --> "16:49"
     this.hourstr = function(hour) {
 	return "" + Math.floor(hour) + ":" + 
 	    zeroPad(Math.round(60 * (hour % 1)), 2);
-    }
+    };
     
     // Draw sector
     this.drawSector = function(color, radius, start, stop) {
@@ -230,7 +234,7 @@ function DaylightClock() {
 	this.ctx.arc(this.cx, this.cy, radius, start, stop, true);
 	this.ctx.closePath();
 	this.ctx.fill(); 
-    }
+    };
     
     // Format the title string describing time left
     // to next sunrise/sunset.  
@@ -240,17 +244,22 @@ function DaylightClock() {
 	var secs = Math.floor(3600 * (time-hours-mins / 60));
 	
 	//return hours + ":" + mins + ":" + secs;
-	if (hours >= 2)
+	if (hours >= 2) {
 	    return Math.round(time) + " hours";
-	else if (hours >= 1)
+	}
+	else if (hours >= 1) {
 	    return "one hour and " + mins + " minutes";
-	else if (mins > 5)
+	}
+	else if (mins > 5) {
 	    return mins + " minutes";
-	else if (mins >= 1)
+	}
+	else if (mins >= 1) {
 	    return mins + " minutes and " + secs + " seconds";
-	else
+	}
+	else {
 	    return secs + " seconds";
-    }
+	}
+    };
     
     // Adapted from 
     // http://www.netlobo.com/url_query_string_javascript.html
@@ -259,11 +268,13 @@ function DaylightClock() {
 	var regexS = "[\\?&]" + param + "=([^&#]*)";
 	var regex = new RegExp(regexS);
 	var results = regex.exec(window.location.href);
-	if (results == null)
+	if (results === null) {
 	    return "";
-	else
+	}
+	else {
 	    return results[1];
-    }
+	}
+    };
     
     // Transform floating point coordinates to
     // N/S,W/E notation.  
@@ -287,33 +298,39 @@ function DaylightClock() {
 	}
 	
 	return lat.toPrecision(4) + "° " + latstr + ", " + lon.toPrecision(4) + "° " + lonstr;
-    }
+    };
     
     this.dayLength = function() {
-	if (this.polarNight())
-	    return .0;
-	else if (this.midnightSun())
-	    return 24.0
+	if (this.polarNight()) {
+	    return 0.0;
+	}
+	else if (this.midnightSun()) {
+	    return 24.0;
+	}
 	return this.setHour - this.riseHour;
-    }
+    };
     
     this.nightLength = function() {
-	if (this.polarNight())
+	if (this.polarNight()) {
 	    return 24.0;
-	else if (this.midnightSun())
-	    return .0
+	}
+	else if (this.midnightSun()) {
+	    return 0.0;
+	}
 	return 24.0 - this.dayLength();
-    }
+    };
     
     this.sunUp = function() {
-	if (this.riseHour < this.hourNow && this.hourNow < this.setHour)
+	if (this.riseHour < this.hourNow && this.hourNow < this.setHour) {
 	    return true;
-	else
+	}
+	else {
 	    return false;
-    }
+	}
+    };
     
     this.polarNight = function() {
-	if (this.riseHour == 0 && this.setHour == 0) {
+	if (this.riseHour === 0 && this.setHour === 0) {
 	    // Northern polar region
 	    if (Math.abs(this.d.getMonth()+1 - 6) > 3 && this.latitude > this.polar_latitude) {
 		return true;
@@ -324,10 +341,10 @@ function DaylightClock() {
 	    }
 	}
 	return false;
-    }
+    };
 
     this.midnightSun = function() {
-	if (this.riseHour == 0 && this.setHour == 0) {
+	if (this.riseHour === 0 && this.setHour === 0) {
 	    // Northern polar region
 	    if (Math.abs(this.d.getMonth()+1 - 6) < 3 && this.latitude > this.polar_latitude) {
 		return true;
@@ -338,7 +355,7 @@ function DaylightClock() {
 	    }
 	}
 	return false;
-    }
+    };
     
     this.geoIP = function() {
 	
@@ -352,7 +369,7 @@ function DaylightClock() {
 	    this.longitude = 0;
 	    this.location_name = "Unknown location";
 	}
-    }
+    };
     
     // Draw clock
     this.draw = function() {
@@ -360,10 +377,12 @@ function DaylightClock() {
 
 	
 	// Solstice workaround
-	if (isNaN(this.riseHour))
+	if (isNaN(this.riseHour)) {
 	    this.riseHour = 0.00;
-	if (isNaN(this.setHour))
+	}
+	if (isNaN(this.setHour)) {
 	    this.setHour = 0.00;
+	}
 	
 	this.ctx.font = "" + Math.floor(0.05*this.scale) + "pt " + this.fontFamily;
 	this.ctx.lineWidth = this.scale*0.018;
@@ -379,17 +398,20 @@ function DaylightClock() {
 	var start = 1;
 	var end = 24;
 	if (this.mode == 12) {
-	    if (this.d.getHours() > 12)
+	    if (this.d.getHours() > 12) {
 		start += 12;
-	    else
+	    }
+	    else {
 		end /= 2;
+	    }
 	}
 	for (i=start; i<=end; i++) {
 	    var tmpx = this.cx + this.trad * Math.cos(this.h2rad(i));
 	    var tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.scale*0.01;
-	    if (i%3==0)
+	    if (i%3 === 0) {
 		this.ctx.fillText(i, tmpx, tmpy);
-	
+	    }
+
 	    // Hour tics
 	    this.ctx.beginPath();   
 	    this.ctx.moveTo(this.cx + this.rad * Math.cos(this.h2rad(i)),
@@ -471,7 +493,7 @@ function DaylightClock() {
 	this.ctx.lineCap = 'round';
 	this.ctx.moveTo(this.cx, this.cy);
 	this.ctx.lineTo(this.cx + this.handLength * Math.cos(this.h2rad(this.hourNow)), 
-			this.cy + .97 * this.rad * Math.sin(this.h2rad(this.hourNow)));
+			this.cy + 0.97 * this.rad * Math.sin(this.h2rad(this.hourNow)));
 	this.ctx.strokeStyle = this.cClockHand;
 	this.ctx.stroke();
 	this.ctx.closePath();
@@ -480,12 +502,14 @@ function DaylightClock() {
 	var tmprad;
 	if (this.mode == 12) {
 	    tmpRad = this.h2rad(this.riseHour + 0.5*(this.setHour-this.riseHour));
-	    if (this.hourNow < this.riseHour || this.hourNow > this.setHour)
+	    if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
 		tmpRad += Math.PI;
+	    }
 	}
-	else
+	else {
 	    tmpRad = 0.5 * (this.h2rad(this.setHour) + this.h2rad(this.riseHour));
-    
+	}
+
 	var dlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad);
 	var dly = this.cy + this.innerLabelRadius * Math.sin(tmpRad);
 	var nlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad + Math.PI);
@@ -493,18 +517,20 @@ function DaylightClock() {
     
 	this.ctx.textAlign = "center";
 
-	if (this.mode == 12 && ! this.sunUp() && this.nightLength() > 12) {}
+
 	// hide day length only if sun down and night runs around the clock
-	else {
+	//else {
+	if (! (this.mode == 12 && ! this.sunUp() && this.nightLength() > 12)) {
 	    this.ctx.fillStyle = this.cNightL;
 	    this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
 	    this.ctx.fillText("day length", dlx, dly - this.innerLabelLineHeight);
 	    this.ctx.fillText(this.hourstr(this.dayLength()), dlx, dly + this.innerLabelLineHeight);
 	}
 
-	if ( this.mode == 12 && this.sunUp() && this.dayLength() > 12) {}
+
 	// hide night length only if sun up and day runs around the clock
-	else {
+	//else {
+	if (! (this.mode == 12 && this.sunUp() && this.dayLength() > 12)) {
 	    this.ctx.fillStyle = this.cDayL;
 	    this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
 	    this.ctx.fillText("night length", nlx, nly - this.innerLabelLineHeight);
@@ -516,37 +542,47 @@ function DaylightClock() {
     
 	var time;
 	var title;
-	if (! this.http_param('lat'))
+	if (! this.http_param('lat')) {
 	    time = this.location_name + " " + this.d.toTimeString();
-	else
+	}
+	else {
 	    time = this.location_name + " " + this.d.toUTCString();
-	
-	if (this.riseHour == 0 && this.setHour == 0 && this.latitude > this.polar_latitude)
+	}
+
+	if (this.riseHour === 0 && this.setHour === 0 && this.latitude > this.polar_latitude) {
 	    title = "polar night";
-	else if (this.riseHour == 0 && this.setHour == 0 && this.latitude < -this.polar_latitude)
+	}
+	else if (this.riseHour === 0 && this.setHour === 0 && this.latitude < -this.polar_latitude) {
 	    title = "midnight sun";
-	else if (this.hourNow < this.riseHour)
+	}
+	else if (this.hourNow < this.riseHour) {
 	    title = "sunrise in " + this.timeremaining(this.riseHour-this.hourNow);
-	else if (this.hourNow < this.setHour)
+	}
+	else if (this.hourNow < this.setHour) {
 	    title = "sunset in " + this.timeremaining(this.setHour-this.hourNow);
-	else if (this.hourNow > this.setHour)
+	}
+	else if (this.hourNow > this.setHour) {
 	    title = "sunrise in " + this.timeremaining(this.riseHour+(24-this.hourNow));
+	}	
 	
 	this.ctx.fillStyle = this.cTitle;
 	this.ctx.font = this.timeFontSize + "pt " + this.fontFamily;
 	this.ctx.fillText(time, this.timeStrX, this.timeStrY);
 	this.ctx.font = "bold " + this.titleFontSize + "pt " + this.fontFamily;
 	this.ctx.fillText(title, this.titleStrX, this.titleStrY);
-
-	// Print sunrise/sunset time labels
-	if (this.riseHour == 0 && this.setHour == 0) {}
-	else {
-	    this.ctx.textAlign = "center";
-	    if (this.riseHour < this.hourNow && this.hourNow < this.setHour)
-		this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
-	    else
-		this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
 	
+	// Print sunrise/sunset time labels
+	//if (this.riseHour == 0 && this.setHour == 0) {}
+	if (! (this.riseHour === 0 && this.setHour === 0)) {
+	//else {
+	    this.ctx.textAlign = "center";
+	    if (this.riseHour < this.hourNow && this.hourNow < this.setHour) {
+		this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
+	    }
+	    else {
+		this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
+	    }	
+
 	    this.ctx.fillText("sunset", 
 			      this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)), 
 			      -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
@@ -554,11 +590,13 @@ function DaylightClock() {
 			      this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)), 
 			      this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
 	
-	    if (this.hourNow < this.riseHour || this.hourNow > this.setHour)
+	    if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
 		this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
-	    else
+	    }
+	    else {
 		this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
-	
+	    }	
+
 	    this.ctx.fillText("sunrise", 
 			      this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)), 
 			      -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
@@ -566,5 +604,5 @@ function DaylightClock() {
 			      this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)), 
 			      this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
 	}
-    }
+    };
 }
