@@ -44,7 +44,7 @@ window.onresize = function(event) {
 function dom12h() {
     dc.setMode(12);
     dc.init();
-    setInterval(dc.update(), 50);
+    setInterval(dc.update(), 1000);
 }
 
 // 24 hour format
@@ -57,7 +57,7 @@ function dom24h() {
 // Left zero-pad numbers
 function zeroPad( number, width) {
     width -= number.toString().length;
-    if ( width > 0 ) {
+    if (width > 0) {
 	return new Array(width + (/\./.test( number ) ? 2 : 1)).join('0') + number;
     }
     return number;
@@ -98,6 +98,8 @@ function DaylightClock() {
     this.cy = 0.56 * this.h;
     this.handLength = 0.97 * this.rad;
 
+    this.fontSize = 0.02 * this.scale;
+
     this.innerLabelRadius = 0.5 * this.rad;
     this.innerLabelFontSize = 0.02 * this.scale;
     this.innerLabelLineHeight = 0.02 * this.scale;
@@ -105,7 +107,6 @@ function DaylightClock() {
     this.outerLabelRadius = 1.38 * this.rad;
     this.outerLabelFontSize = 0.02 * this.scale;
     this.outerLabelLineHeight = 0.02 * this.scale;
-
 
     this.titleFontSize = Math.floor(0.04 * this.scale);
     this.timeFontSize = 0.018 * this.scale;
@@ -115,7 +116,6 @@ function DaylightClock() {
     this.timeStrY = 2.2 * this.timeFontSize;
     this.titleStrX = 0.03 * this.w;
     this.titleStrY = 2.8 * this.titleFontSize;
-
 
     // Initialization routine
     this.init = function() {
@@ -328,37 +328,41 @@ function DaylightClock() {
 	    return false;
 	}
     };
-    
+
+    // SunriseSunset gives NaNs for sunset/sunset times for polar night and
+    // polar day (midnight sun).
     this.polarNight = function() {
 	if (this.riseHour === 0 && this.setHour === 0) {
-	    // Northern polar region
-	    if (Math.abs(this.d.getMonth()+1 - 6) > 3 && this.latitude > this.polar_latitude) {
+	    // Northern polar region, summer
+	    if (Math.abs(this.d.getMonth() + 1 - 6) > 3 && this.latitude > this.polar_latitude) {
 		return true;
 	    }
-	    // Southern polar region
-	    else if (Math.abs(this.d.getMonth()+1 - 6) < 3 && this.latitude < -this.polar_latitude) {
+	    // Southern polar region, summer
+	    else if (Math.abs(this.d.getMonth() + 1 - 6) < 3 && this.latitude < -this.polar_latitude) {
 		return true;
 	    }
 	}
 	return false;
     };
 
+    // SunriseSunset gives NaNs for sunset/sunset times for polar night and
+    // polar day (midnight sun).
     this.midnightSun = function() {
 	if (this.riseHour === 0 && this.setHour === 0) {
-	    // Northern polar region
-	    if (Math.abs(this.d.getMonth()+1 - 6) < 3 && this.latitude > this.polar_latitude) {
+	    // Northern polar region, winter
+	    if (Math.abs(this.d.getMonth() + 1 - 6) < 3 && this.latitude > this.polar_latitude) {
 		return true;
 	    }
-	    // Southern polar region
-	    else if (Math.abs(this.d.getMonth()+1 - 6) > 3 && this.latitude < -this.polar_latitude) {
+	    // Southern polar region, winter
+	    else if (Math.abs(this.d.getMonth() + 1 - 6) > 3 && this.latitude < -this.polar_latitude) {
 		return true;
 	    }
 	}
 	return false;
     };
     
+    // Detect location using maxmind.com's service.  
     this.geoIP = function() {
-	
 	try {
 	    this.latitude = geoip_latitude();
 	    this.longitude = geoip_longitude();
@@ -373,8 +377,6 @@ function DaylightClock() {
     
     // Draw clock
     this.draw = function() {
-
-
 	
 	// Solstice workaround
 	if (isNaN(this.riseHour)) {
@@ -384,8 +386,8 @@ function DaylightClock() {
 	    this.setHour = 0.00;
 	}
 	
-	this.ctx.font = "" + Math.floor(0.05*this.scale) + "pt " + this.fontFamily;
-	this.ctx.lineWidth = this.scale*0.018;
+	this.ctx.font = "" + Math.floor(0.05 * this.scale) + "pt " + this.fontFamily;
+	this.ctx.lineWidth = this.scale * 0.018;
 	
 	// background
 	this.ctx.fillStyle = this.cBackground;
@@ -393,7 +395,7 @@ function DaylightClock() {
 	
 	// Print hour tics
 	this.ctx.fillStyle = this.cText;
-	this.ctx.font = this.scale * 0.02 + "pt " + this.fontFamily;
+	this.ctx.font = this.fontSize + "pt " + this.fontFamily;
 	this.ctx.textAlign = "center";
 	var start = 1;
 	var end = 24;
@@ -405,9 +407,9 @@ function DaylightClock() {
 		end /= 2;
 	    }
 	}
-	for (i=start; i<=end; i++) {
+	for (var i=start; i<=end; i++) {
 	    var tmpx = this.cx + this.trad * Math.cos(this.h2rad(i));
-	    var tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.scale*0.01;
+	    var tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.fontSize / 2;
 	    if (i%3 === 0) {
 		this.ctx.fillText(i, tmpx, tmpy);
 	    }
@@ -501,7 +503,7 @@ function DaylightClock() {
 	// Print day and night length
 	var tmprad;
 	if (this.mode == 12) {
-	    tmpRad = this.h2rad(this.riseHour + 0.5*(this.setHour-this.riseHour));
+	    tmpRad = this.h2rad(this.riseHour + 0.5 * (this.setHour-this.riseHour));
 	    if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
 		tmpRad += Math.PI;
 	    }
@@ -517,9 +519,7 @@ function DaylightClock() {
     
 	this.ctx.textAlign = "center";
 
-
 	// hide day length only if sun down and night runs around the clock
-	//else {
 	if (! (this.mode == 12 && ! this.sunUp() && this.nightLength() > 12)) {
 	    this.ctx.fillStyle = this.cNightL;
 	    this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
@@ -529,7 +529,6 @@ function DaylightClock() {
 
 
 	// hide night length only if sun up and day runs around the clock
-	//else {
 	if (! (this.mode == 12 && this.sunUp() && this.dayLength() > 12)) {
 	    this.ctx.fillStyle = this.cDayL;
 	    this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
@@ -542,17 +541,21 @@ function DaylightClock() {
     
 	var time;
 	var title;
-	if (! this.http_param('lat')) {
+
+	// Use UTC time when coordinates are given explicitly and
+	// localtime when detecting location using geoIP.  
+	if (! this.http_param('lat') && this.http_param('lon')) {
 	    time = this.location_name + " " + this.d.toTimeString();
 	}
 	else {
 	    time = this.location_name + " " + this.d.toUTCString();
 	}
 
-	if (this.riseHour === 0 && this.setHour === 0 && this.latitude > this.polar_latitude) {
+	// Set title string
+	if (this.polarNight()) {
 	    title = "polar night";
 	}
-	else if (this.riseHour === 0 && this.setHour === 0 && this.latitude < -this.polar_latitude) {
+	else if (this.midnightSun()) {
 	    title = "midnight sun";
 	}
 	else if (this.hourNow < this.riseHour) {
@@ -572,9 +575,7 @@ function DaylightClock() {
 	this.ctx.fillText(title, this.titleStrX, this.titleStrY);
 	
 	// Print sunrise/sunset time labels
-	//if (this.riseHour == 0 && this.setHour == 0) {}
 	if (! (this.riseHour === 0 && this.setHour === 0)) {
-	//else {
 	    this.ctx.textAlign = "center";
 	    if (this.riseHour < this.hourNow && this.hourNow < this.setHour) {
 		this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
