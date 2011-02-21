@@ -23,11 +23,11 @@
 //
 // <html>
 // <head></head>
-// <body onload="dom12h();">
+// <body>
 //   <canvas id="daylight-clock" width="400" height="400"></canvas>
-//   <script type="text/javascript" src="./daylight-clock.js">Please enable JavaScript.</script>
 //   <script type="text/javascript" src="./SunriseSunset.js"></script>
 //   <script type="text/javascript" src="http://j.maxmind.com/app/geoip.js"></script>
+//   <script type="text/javascript" src="./daylight-clock.js"></script>
 // </body>
 // </html>
 
