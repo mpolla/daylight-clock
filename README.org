@@ -1,6 +1,19 @@
+* About
+
+Daylight-clock is a JavaScript/HTML5 widget to display sunrise/sunset
+times and day/night lengths for your own location and time
+zone. 
+
+** External components:
+
+- Location detection is implemented using MaxMind.com's GeoIP service
+- Sunrise algorithm implementation by Preston Hunt
 
 * Put daylight-clock on your own site
 
-  Copy/paste the following lines your page to include daylight-clock on your site.
+Include the following lines in a HTML page:
 
-  TODO..
+: <canvas id="daylight-clock" width="400" height="400"></canvas>
+: <script type="text/javascript" src="./SunriseSunset.js"></script>
+: <script type="text/javascript" src="http://j.maxmind.com/app/geoip.js"></script>
+: <script type="text/javascript" src="./daylight-clock.js"></script>
