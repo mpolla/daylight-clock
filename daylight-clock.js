@@ -119,7 +119,7 @@ function DaylightClock() {
 
     // Initialization routine
     this.init = function() {
-	//d = new Date(2010, 5, 21, 4, 37, 33, 123);
+
 	this.d = new Date();
 	this.offset = -this.d.getTimezoneOffset() / 60;
 	
@@ -212,8 +212,9 @@ function DaylightClock() {
 
 	}
 
-	this.hourNow > rh ? this.riseHour = rht : this.riseHour = rh;
-	this.hourNow > sh ? this.setHour = sht : this.setHour = sh;
+	// Display tomorrow's times if sunrise/sunset has passed for today.  
+	(this.hourNow > rh && this.hourNow > rht) ? this.riseHour = rht : this.riseHour = rh;
+	(this.hourNow > sh && this.hourNow > sht) ? this.setHour = sht : this.setHour = sh;
 
 	this.draw();
     };
