@@ -52,14 +52,14 @@ window.onresize = function (event) {
 (function dom12h() {
     dc.setMode(12);
     dc.init();
-    setInterval(dc.update(), 1000);
+    setInterval("dc.update()", 1000);
 }());
 
 // 24 hour format
 function dom24h() {
     dc.setMode(24);
     dc.init();
-    setInterval(dc.update(), 1000);
+    setInterval("dc.update()", 1000);
 }
 
 // Left zero-pad numbers
