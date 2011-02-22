@@ -544,11 +544,11 @@ function DaylightClock() {
 
 	// Use UTC time when coordinates are given explicitly and
 	// localtime when detecting location using geoIP.  
-	if (! this.httpParam('lat') && this.httpParam('lon')) {
-	    time = this.location_name + " " + this.d.toTimeString();
+	if (this.httpParam('lat') && this.httpParam('lon')) {
+	    time = this.location_name + " " + this.d.toUTCString();
 	}
 	else {
-	    time = this.location_name + " " + this.d.toUTCString();
+	    time = this.location_name + " " + this.d.toTimeString();
 	}
 
 	// Set title string
