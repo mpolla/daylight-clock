@@ -91,7 +91,7 @@ var DaylightClock = function () {
 
     this.polar_latitude = 66;
     this.cx = 0.5 * this.w;
-    this.cy = 0.56 * this.h;
+    this.cy = 0.52 * this.h;
     this.handLength = 0.97 * this.rad;
 
     this.fontSize = 0.02 * this.scale;
@@ -105,7 +105,7 @@ var DaylightClock = function () {
     this.outerLabelLineHeight = 0.02 * this.scale;
 
     this.titleFontSize = Math.floor(0.04 * this.scale);
-    this.timeFontSize = 0.018 * this.scale;
+    this.timeFontSize = 0.02 * this.scale;
     this.fontFamily = "Arial";
 
     this.timeStrX = 0.03 * this.w;
