@@ -92,7 +92,8 @@ var DaylightClock = function () {
     this.polar_latitude = 66;
     this.cx = 0.5 * this.w;
     this.cy = 0.52 * this.h;
-    this.handLength = 0.97 * this.rad;
+    this.handLength = this.innerRad;
+    this.handWidth = this.scale * 0.018;
 
     this.fontSize = 0.02 * this.scale;
 
@@ -374,33 +375,14 @@ DaylightClock.prototype.geoIP = function () {
     }
 };
 
-// Draw clock
-DaylightClock.prototype.draw = function () {
-
-    var i, start, end, time, title, dlx, dly, nlx, nly, tmpRad, tmpx, tmpy;
-
-    // Solstice workaround
-    if (isNaN(this.riseHour)) {
-        this.riseHour = 0.00;
-    }
-    if (isNaN(this.setHour)) {
-        this.setHour = 0.00;
-    }
-
-    this.ctx.font = Math.floor(0.05 * this.scale) + "pt " + this.fontFamily;
-    this.ctx.lineWidth = this.scale * 0.018;
-
-    // background
-    this.ctx.fillStyle = this.cBackground;
-    this.ctx.fillRect(0, 0, this.w, this.h);
-
-    // Print hour tics
-    this.ctx.fillStyle = this.cText;
-    this.ctx.font = this.fontSize + "pt " + this.fontFamily;
-    this.ctx.textAlign = "center";
-
+DaylightClock.prototype.draw_hourtics = function () {
+    var i, start, end, tmpx, tmpy;
     start = 1;
     end = 24;
+
+    this.ctx.fillStyle = this.cTitle;
+
+    this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
 
     if (this.mode === 12) {
         if (this.d.getHours() > 12) {
@@ -409,14 +391,16 @@ DaylightClock.prototype.draw = function () {
             end /= 2;
         }
     }
+
+    this.ctx.textAlign = "center";
     for (i = start; i <= end; i += 1) {
         tmpx = this.cx + this.trad * Math.cos(this.h2rad(i));
         tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.fontSize / 2;
         if (i % 3 === 0) {
             this.ctx.fillText(i, tmpx, tmpy);
+
         }
 
-        // Hour tics
         this.ctx.beginPath();
         this.ctx.moveTo(this.cx + this.rad * Math.cos(this.h2rad(i)),
                         this.cy + this.rad * Math.sin(this.h2rad(i)));
@@ -427,6 +411,84 @@ DaylightClock.prototype.draw = function () {
         this.ctx.closePath();
     }
 
+    // Print hour tics
+    this.ctx.fillStyle = this.cText;
+    this.ctx.font = this.fontSize + "pt " + this.fontFamily;
+
+
+};
+
+DaylightClock.prototype.draw_labels = function() {
+
+    this.ctx.fillStyle = this.cText;
+    // Print sunrise/sunset time labels
+    if (!(this.riseHour === 0 && this.setHour === 0)) {
+        this.ctx.textAlign = "center";
+        if (this.riseHour < this.hourNow && this.hourNow < this.setHour) {
+            this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
+        } else {
+            this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
+        }
+
+        this.ctx.fillText("sunset",
+                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)),
+                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
+        this.ctx.fillText("at " + this.hourstr(this.setHour),
+                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)),
+                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
+
+        if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
+            this.ctx.font = "bold " + this.outerLabelFontSize
+                + "pt " + this.fontFamily;
+        } else {
+            this.ctx.font = this.outerLabelFontSize
+                + "pt " + this.fontFamily;
+        }
+
+        this.ctx.fillText("sunrise",
+                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)),
+                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
+        this.ctx.fillText("at " + this.hourstr(this.riseHour),
+                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)),
+                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
+    }
+};
+
+DaylightClock.prototype.draw_title = function () {
+    var time, title;
+
+    // Use UTC time when coordinates are given explicitly and
+    // localtime when detecting location using geoIP.
+    if (this.httpParam('lat') && this.httpParam('lon')) {
+        time = this.location_name + " " + this.d.toUTCString();
+    } else {
+        time = this.location_name + " " + this.d.toTimeString();
+    }
+
+    // Set title string
+    if (this.polarNight()) {
+        title = "polar night";
+    } else if (this.midnightSun()) {
+        title = "midnight sun";
+    } else if (this.hourNow < this.riseHour) {
+        title = "sunrise in " + this.timeremaining(this.riseHour - this.hourNow);
+    } else if (this.hourNow < this.setHour) {
+        title = "sunset in " + this.timeremaining(this.setHour - this.hourNow);
+    } else if (this.hourNow > this.setHour) {
+        title = "sunrise in " + this.timeremaining(this.riseHour + (24 - this.hourNow));
+    }
+
+    this.ctx.textAlign = "left";
+    this.ctx.fillStyle = this.cTitle;
+    this.ctx.font = this.timeFontSize + "pt " + this.fontFamily;
+    this.ctx.fillText(time, this.timeStrX, this.timeStrY);
+    this.ctx.font = "bold " + this.titleFontSize + "pt " + this.fontFamily;
+    this.ctx.fillText(title, this.titleStrX, this.titleStrY);
+};
+
+
+DaylightClock.prototype.draw_sectors = function () {
+    var dlx, dly, nlx, nly, tmpRad;
 
     if (this.mode === 12) {
         // Polar night (kaamos)
@@ -485,15 +547,6 @@ DaylightClock.prototype.draw = function () {
                         this.h2rad(this.riseHour));
     }
 
-    // Clock hand
-    this.ctx.beginPath();
-    this.ctx.lineCap = 'round';
-    this.ctx.moveTo(this.cx, this.cy);
-    this.ctx.lineTo(this.cx + this.handLength * Math.cos(this.h2rad(this.hourNow)),
-                    this.cy + 0.97 * this.rad * Math.sin(this.h2rad(this.hourNow)));
-    this.ctx.strokeStyle = this.cClockHand;
-    this.ctx.stroke();
-    this.ctx.closePath();
 
     // Print day and night length
     if (this.mode === 12) {
@@ -504,6 +557,8 @@ DaylightClock.prototype.draw = function () {
     } else {
         tmpRad = 0.5 * (this.h2rad(this.setHour) + this.h2rad(this.riseHour));
     }
+
+
 
     dlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad);
     dly = this.cy + this.innerLabelRadius * Math.sin(tmpRad);
@@ -529,67 +584,41 @@ DaylightClock.prototype.draw = function () {
         this.ctx.fillText(this.hourstr(this.nightLength()), nlx, nly + this.innerLabelLineHeight);
     }
 
-    // Show sunrise/sunset ticker
-    this.ctx.textAlign = "left";
+};
 
-    // Use UTC time when coordinates are given explicitly and
-    // localtime when detecting location using geoIP.
-    if (this.httpParam('lat') && this.httpParam('lon')) {
-        time = this.location_name + " " + this.d.toUTCString();
-    } else {
-        time = this.location_name + " " + this.d.toTimeString();
+DaylightClock.prototype.draw_hand = function () {
+
+    this.ctx.beginPath();
+    this.ctx.lineCap = 'round';
+    this.ctx.lineWidth = this.handWidth;
+    this.ctx.moveTo(this.cx, this.cy);
+    this.ctx.lineTo(this.cx + (this.handLength-this.handWidth/2) * Math.cos(this.h2rad(this.hourNow)),
+                    this.cy + (this.handLength-this.handWidth/2) * Math.sin(this.h2rad(this.hourNow)));
+    this.ctx.strokeStyle = this.cClockHand;
+    this.ctx.stroke();
+    this.ctx.closePath();
+};
+
+// Draw clock
+DaylightClock.prototype.draw = function () {
+
+    // Solstice workaround
+    if (isNaN(this.riseHour)) {
+        this.riseHour = 0.00;
+    }
+    if (isNaN(this.setHour)) {
+        this.setHour = 0.00;
     }
 
-    // Set title string
-    if (this.polarNight()) {
-        title = "polar night";
-    } else if (this.midnightSun()) {
-        title = "midnight sun";
-    } else if (this.hourNow < this.riseHour) {
-        title = "sunrise in " + this.timeremaining(this.riseHour - this.hourNow);
-    } else if (this.hourNow < this.setHour) {
-        title = "sunset in " + this.timeremaining(this.setHour - this.hourNow);
-    } else if (this.hourNow > this.setHour) {
-        title = "sunrise in " + this.timeremaining(this.riseHour + (24 - this.hourNow));
-    }
+    // background
+    this.ctx.fillStyle = this.cBackground;
+    this.ctx.fillRect(0, 0, this.w, this.h);
 
-    this.ctx.fillStyle = this.cTitle;
-    this.ctx.font = this.timeFontSize + "pt " + this.fontFamily;
-    this.ctx.fillText(time, this.timeStrX, this.timeStrY);
-    this.ctx.font = "bold " + this.titleFontSize + "pt " + this.fontFamily;
-    this.ctx.fillText(title, this.titleStrX, this.titleStrY);
-
-    // Print sunrise/sunset time labels
-    if (!(this.riseHour === 0 && this.setHour === 0)) {
-        this.ctx.textAlign = "center";
-        if (this.riseHour < this.hourNow && this.hourNow < this.setHour) {
-            this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
-        } else {
-            this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
-        }
-
-        this.ctx.fillText("sunset",
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)),
-                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
-        this.ctx.fillText("at " + this.hourstr(this.setHour),
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)),
-                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
-
-        if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
-            this.ctx.font = "bold " + this.outerLabelFontSize
-                + "pt " + this.fontFamily;
-        } else {
-            this.ctx.font = this.outerLabelFontSize
-                + "pt " + this.fontFamily;
-        }
-
-        this.ctx.fillText("sunrise",
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)),
-                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
-        this.ctx.fillText("at " + this.hourstr(this.riseHour),
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)),
-                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
-    }
+    this.draw_hourtics();
+    this.draw_title();
+    this.draw_sectors();
+    this.draw_labels();
+    this.draw_hand();
 };
 
 // Calling dc.update() from setInterval doesn't
@@ -602,10 +631,10 @@ dc = new DaylightClock();
 
 // 12 hour format
 (function dom12h() {
-    dc.setMode(12);
-    dc.init();
-    setInterval(dcUpdate, 1000);
-}());
+     dc.setMode(12);
+     dc.init();
+     setInterval(dcUpdate, 1000);
+ }());
 
 // 24 hour format
 function dom24h() {
