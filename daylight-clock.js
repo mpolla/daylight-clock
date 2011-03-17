@@ -587,7 +587,7 @@ DaylightClock.prototype.draw_sectors = function () {
     this.ctx.textAlign = "center";
 
     // hide day length only if sun down and night runs around the clock
-    if (!(this.mode === 12 && !this.sunUp() && this.nightLength() > 12)) {
+    if (!(this.mode === 12 && !this.sunUp())) {
         this.ctx.fillStyle = this.cNightL;
         this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
         this.ctx.fillText("day length", dlx, dly - this.innerLabelLineHeight);
@@ -596,7 +596,7 @@ DaylightClock.prototype.draw_sectors = function () {
 
 
     // hide night length only if sun up and day runs around the clock
-    if (!(this.mode === 12 && this.sunUp() && this.dayLength() > 12)) {
+    if (!(this.mode === 12 && this.sunUp())) {
         this.ctx.fillStyle = this.cDayL;
         this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
         this.ctx.fillText("night length", nlx, nly - this.innerLabelLineHeight);
