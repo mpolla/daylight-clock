@@ -418,39 +418,58 @@ DaylightClock.prototype.draw_hourtics = function () {
 
 };
 
+// Print sunrise/sunset time labels
 DaylightClock.prototype.draw_labels = function() {
 
+    var rrad, srad, mingap;
+
+    mingap = Math.PI/8;
+    rrad = this.h2rad(this.riseHour);
+    srad = this.h2rad(this.setHour);
+
+    if (Math.abs(srad-rrad) < mingap) {
+        if (rrad > srad) {
+            rrad += mingap / 2;
+            srad -= mingap / 2;
+        }
+        else {
+            rrad -= mingap / 2;
+            srad += mingap / 2
+        }
+    }
+
     this.ctx.fillStyle = this.cText;
-    // Print sunrise/sunset time labels
+    this.ctx.textAlign = "center";
+
     if (!(this.riseHour === 0 && this.setHour === 0)) {
-        this.ctx.textAlign = "center";
+
         if (this.riseHour < this.hourNow && this.hourNow < this.setHour) {
             this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
         } else {
             this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
         }
-
         this.ctx.fillText("sunset",
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)),
-                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
+                          this.cx + this.outerLabelRadius * Math.cos(srad),
+                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(srad));
         this.ctx.fillText("at " + this.hourstr(this.setHour),
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.setHour)),
-                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.setHour)));
+                          this.cx + this.outerLabelRadius * Math.cos(srad),
+                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(srad));
+
+
+
 
         if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
-            this.ctx.font = "bold " + this.outerLabelFontSize
-                + "pt " + this.fontFamily;
+            this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
         } else {
-            this.ctx.font = this.outerLabelFontSize
-                + "pt " + this.fontFamily;
+            this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
         }
 
         this.ctx.fillText("sunrise",
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)),
-                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
+                          this.cx + this.outerLabelRadius * Math.cos(rrad),
+                          -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(rrad));
         this.ctx.fillText("at " + this.hourstr(this.riseHour),
-                          this.cx + this.outerLabelRadius * Math.cos(this.h2rad(this.riseHour)),
-                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(this.h2rad(this.riseHour)));
+                          this.cx + this.outerLabelRadius * Math.cos(rrad),
+                          this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(rrad));
     }
 };
 
