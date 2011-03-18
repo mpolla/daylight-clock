@@ -398,7 +398,6 @@ DaylightClock.prototype.draw_hourtics = function () {
         tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.fontSize / 2;
         if (i % 3 === 0) {
             this.ctx.fillText(i, tmpx, tmpy);
-
         }
 
         this.ctx.beginPath();
@@ -414,27 +413,27 @@ DaylightClock.prototype.draw_hourtics = function () {
     // Print hour tics
     this.ctx.fillStyle = this.cText;
     this.ctx.font = this.fontSize + "pt " + this.fontFamily;
-
-
 };
 
 // Print sunrise/sunset time labels
-DaylightClock.prototype.draw_labels = function() {
+DaylightClock.prototype.draw_labels = function () {
 
-    var rrad, srad, mingap;
+    var rrad, srad, mingap, dlx, dly, nlx, nly, tmpRad;
 
-    mingap = Math.PI/8;
+    // Defines the minimum distance (in radians)
+    // between labels.  
+    mingap = Math.PI / 8;
+
     rrad = this.h2rad(this.riseHour);
     srad = this.h2rad(this.setHour);
 
-    if (Math.abs(srad-rrad) < mingap) {
+    if (Math.abs(srad - rrad) < mingap) {
         if (rrad > srad) {
             rrad += mingap / 2;
             srad -= mingap / 2;
-        }
-        else {
+        } else {
             rrad -= mingap / 2;
-            srad += mingap / 2
+            srad += mingap / 2;
         }
     }
 
@@ -456,8 +455,6 @@ DaylightClock.prototype.draw_labels = function() {
                           this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(srad));
 
 
-
-
         if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
             this.ctx.font = "bold " + this.outerLabelFontSize + "pt " + this.fontFamily;
         } else {
@@ -470,6 +467,40 @@ DaylightClock.prototype.draw_labels = function() {
         this.ctx.fillText("at " + this.hourstr(this.riseHour),
                           this.cx + this.outerLabelRadius * Math.cos(rrad),
                           this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(rrad));
+    }
+
+
+    // Day length / night length labels
+    if (this.mode === 12) {
+        tmpRad = this.h2rad(this.riseHour + 0.5 * (this.setHour - this.riseHour));
+        if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
+            tmpRad += Math.PI;
+        }
+    } else {
+        tmpRad = 0.5 * (this.h2rad(this.setHour) + this.h2rad(this.riseHour));
+    }
+
+    dlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad);
+    dly = this.cy + this.innerLabelRadius * Math.sin(tmpRad);
+    nlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad + Math.PI);
+    nly = this.cy + this.innerLabelRadius * Math.sin(tmpRad + Math.PI);
+
+    this.ctx.textAlign = "center";
+
+    // hide day length only if sun down and night runs around the clock
+    if (!(this.mode === 12 && !this.sunUp())) {
+        this.ctx.fillStyle = this.cNightL;
+        this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
+        this.ctx.fillText("day length", dlx, dly - this.innerLabelLineHeight);
+        this.ctx.fillText(this.hourstr(this.dayLength()), dlx, dly + this.innerLabelLineHeight);
+    }
+
+    // hide night length only if sun up and day runs around the clock
+    if (!(this.mode === 12 && this.sunUp())) {
+        this.ctx.fillStyle = this.cDayL;
+        this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
+        this.ctx.fillText("night length", nlx, nly - this.innerLabelLineHeight);
+        this.ctx.fillText(this.hourstr(this.nightLength()), nlx, nly + this.innerLabelLineHeight);
     }
 };
 
@@ -507,7 +538,6 @@ DaylightClock.prototype.draw_title = function () {
 
 
 DaylightClock.prototype.draw_sectors = function () {
-    var dlx, dly, nlx, nly, tmpRad;
 
     if (this.mode === 12) {
         // Polar night (kaamos)
@@ -567,41 +597,6 @@ DaylightClock.prototype.draw_sectors = function () {
     }
 
 
-    // Print day and night length
-    if (this.mode === 12) {
-        tmpRad = this.h2rad(this.riseHour + 0.5 * (this.setHour - this.riseHour));
-        if (this.hourNow < this.riseHour || this.hourNow > this.setHour) {
-            tmpRad += Math.PI;
-        }
-    } else {
-        tmpRad = 0.5 * (this.h2rad(this.setHour) + this.h2rad(this.riseHour));
-    }
-
-
-
-    dlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad);
-    dly = this.cy + this.innerLabelRadius * Math.sin(tmpRad);
-    nlx = this.cx + this.innerLabelRadius * Math.cos(tmpRad + Math.PI);
-    nly = this.cy + this.innerLabelRadius * Math.sin(tmpRad + Math.PI);
-
-    this.ctx.textAlign = "center";
-
-    // hide day length only if sun down and night runs around the clock
-    if (!(this.mode === 12 && !this.sunUp())) {
-        this.ctx.fillStyle = this.cNightL;
-        this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
-        this.ctx.fillText("day length", dlx, dly - this.innerLabelLineHeight);
-        this.ctx.fillText(this.hourstr(this.dayLength()), dlx, dly + this.innerLabelLineHeight);
-    }
-
-
-    // hide night length only if sun up and day runs around the clock
-    if (!(this.mode === 12 && this.sunUp())) {
-        this.ctx.fillStyle = this.cDayL;
-        this.ctx.font = "bold " + this.innerLabelFontSize + "pt " + this.fontFamily;
-        this.ctx.fillText("night length", nlx, nly - this.innerLabelLineHeight);
-        this.ctx.fillText(this.hourstr(this.nightLength()), nlx, nly + this.innerLabelLineHeight);
-    }
 
 };
 
@@ -611,8 +606,8 @@ DaylightClock.prototype.draw_hand = function () {
     this.ctx.lineCap = 'round';
     this.ctx.lineWidth = this.handWidth;
     this.ctx.moveTo(this.cx, this.cy);
-    this.ctx.lineTo(this.cx + (this.handLength-this.handWidth/2) * Math.cos(this.h2rad(this.hourNow)),
-                    this.cy + (this.handLength-this.handWidth/2) * Math.sin(this.h2rad(this.hourNow)));
+    this.ctx.lineTo(this.cx + (this.handLength - this.handWidth / 2) * Math.cos(this.h2rad(this.hourNow)),
+                    this.cy + (this.handLength - this.handWidth / 2) * Math.sin(this.h2rad(this.hourNow)));
     this.ctx.strokeStyle = this.cClockHand;
     this.ctx.stroke();
     this.ctx.closePath();
@@ -636,8 +631,8 @@ DaylightClock.prototype.draw = function () {
     this.draw_hourtics();
     this.draw_title();
     this.draw_sectors();
-    this.draw_labels();
     this.draw_hand();
+    this.draw_labels();
 };
 
 // Calling dc.update() from setInterval doesn't
@@ -650,10 +645,10 @@ dc = new DaylightClock();
 
 // 12 hour format
 (function dom12h() {
-     dc.setMode(12);
-     dc.init();
-     setInterval(dcUpdate, 1000);
- }());
+    dc.setMode(12);
+    dc.init();
+    setInterval(dcUpdate, 1000);
+}());
 
 // 24 hour format
 function dom24h() {
