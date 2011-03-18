@@ -63,14 +63,15 @@ var DaylightClock = function () {
 
     // Define colors
     this.cNight = "rgba(0,0,90,1)";
-    this.cNightL = "rgba(40,40,120,1)";
+    this.cNightL = "rgba(0,0,90,1)";
     this.cDay = "rgba(190,190,220,1)";
-    this.cDayL = "rgba(140,140,200,1)";
+    this.cDayL = "rgba(190,190,220,1)";
     this.cText = "rgba(100,100,100,0.9)";
     this.cBackground = "rgb(255,255,255)";
     this.cTitle = "rgba(80,80,80,0.7)";
     this.cTic = "rgba(130,130,130,0.7)";
-    this.cClockHand = "rgba(255,120,60,0.8)";
+    this.cClockHand = "rgba(255,120,60,0.98)";
+    this.cShadow = "rgba(120,120,120,0.7)";
 
     // Grab the canvas context.
     this.canvas = document.getElementById("daylight-clock");
@@ -421,7 +422,7 @@ DaylightClock.prototype.draw_labels = function () {
     var rrad, srad, mingap, dlx, dly, nlx, nly, tmpRad;
 
     // Defines the minimum distance (in radians)
-    // between labels.  
+    // between labels.
     mingap = Math.PI / 8;
 
     rrad = this.h2rad(this.riseHour);
@@ -539,6 +540,8 @@ DaylightClock.prototype.draw_title = function () {
 
 DaylightClock.prototype.draw_sectors = function () {
 
+    var lastEventHour;
+
     if (this.mode === 12) {
         // Polar night (kaamos)
         if (this.polarNight()) {
@@ -596,7 +599,16 @@ DaylightClock.prototype.draw_sectors = function () {
                         this.h2rad(this.riseHour));
     }
 
+    // Shade past hours since last sunrise/sunset
+    if (this.sunUp()) {
+        lastEventHour = this.riseHour;
+    } else {
+        lastEventHour = this.setHour;
+    }
 
+    this.drawSector(this.cShadow, this.innerRad,
+                    this.h2rad(this.hourNow),
+                    this.h2rad(lastEventHour));
 
 };
 
