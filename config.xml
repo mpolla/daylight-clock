@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+  <widget xmlns="http://www.w3.org/ns/widgets" id="http://github.com/mpolla/daylight-clock" version="0.01">
+  <name>Daylight Clock</name>
+  <description>Show sunrise/sunset times in your location.</description>
+  <content src="index.html" />
+  <icon src="icon.png" />
+  <author>Matti Pöllä</author>
+</widget>
