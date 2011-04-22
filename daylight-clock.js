@@ -34,7 +34,6 @@
 /*global window*/
 /*global document*/
 
-var setInterval;
 var SunriseSunset;
 var geoip_latitude, geoip_longitude, geoip_city, geoip_country_name;
 var zeroPad, dom12h, dom24h, DaylightClock;
@@ -69,7 +68,7 @@ var DaylightClock = function () {
     this.cText = "rgba(100,100,100,0.9)";
     this.cBackground = "rgb(255,255,255)";
     this.cTitle = "rgba(80,80,80,0.7)";
-    this.cTic = "rgba(130,130,130,0.7)";
+    this.cTic = "rgba(90,90,90,0.5)";
     this.cClockHand = "rgba(255,120,60,0.98)";
     this.cShadow = "rgba(120,120,120,0.7)";
 
@@ -148,8 +147,6 @@ DaylightClock.prototype.init = function () {
     } else {
         this.location_name = this.coordstr(this.latitude, this.longitude);
     }
-
-    this.update();
 };
 
 DaylightClock.prototype.resize = function () {
@@ -395,25 +392,26 @@ DaylightClock.prototype.draw_hourtics = function () {
 
     this.ctx.textAlign = "center";
     for (i = start; i <= end; i += 1) {
-        tmpx = this.cx + this.trad * Math.cos(this.h2rad(i));
-        tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.fontSize / 2;
-        if (i % 3 === 0) {
-            this.ctx.fillText(i, tmpx, tmpy);
-        }
+        //tmpx = this.cx + this.trad * Math.cos(this.h2rad(i));
+        //tmpy = this.cy + this.trad * Math.sin(this.h2rad(i)) + this.fontSize / 2;
+        //if (i % 3 === 0) {
+        //    this.ctx.fillText(i, tmpx, tmpy);
+        //}
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.cx + this.rad * Math.cos(this.h2rad(i)),
-                        this.cy + this.rad * Math.sin(this.h2rad(i)));
-        this.ctx.lineTo(this.cx + this.rad * Math.cos(this.h2rad(i)),
-                        this.cy + this.rad * Math.sin(this.h2rad(i)));
-        this.ctx.strokeStyle = this.cTic;
-        this.ctx.stroke();
-        this.ctx.closePath();
+      //this.ctx.strokeStyle = this.cTic;
+      this.ctx.fillStyle = this.cTic;
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeStyle = this.cTic;
+      this.ctx.beginPath();
+      this.ctx.arc(this.cx + this.rad * Math.cos(this.h2rad(i)), this.cy + this.rad * Math.sin(this.h2rad(i)), this.scale * 0.01, 0, Math.PI * 2, true);
+      this.ctx.closePath();
+      this.ctx.stroke();
+      this.ctx.fill();
     }
 
     // Print hour tics
-    this.ctx.fillStyle = this.cText;
-    this.ctx.font = this.fontSize + "pt " + this.fontFamily;
+    //this.ctx.fillStyle = this.cText;
+    //this.ctx.font = this.fontSize + "pt " + this.fontFamily;
 };
 
 // Print sunrise/sunset time labels
