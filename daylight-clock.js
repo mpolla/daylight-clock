@@ -70,7 +70,7 @@ var DaylightClock = function () {
     this.cTitle = "rgba(80,80,80,0.7)";
     this.cTic = "rgba(90,90,90,0.5)";
     this.cClockHand = "rgba(255,120,60,0.98)";
-    this.cShadow = "rgba(120,120,120,0.7)";
+    this.cShadow = "rgba(120,120,120,0.6)";
 
     // Grab the canvas context.
     this.canvas = document.getElementById("daylight-clock");
@@ -638,11 +638,11 @@ DaylightClock.prototype.draw = function () {
     this.ctx.fillStyle = this.cBackground;
     this.ctx.fillRect(0, 0, this.w, this.h);
 
-    this.draw_hourtics();
-    this.draw_title();
+    //this.draw_hourtics();
+    //this.draw_title();
     this.draw_sectors();
     this.draw_hand();
-    this.draw_labels();
+    //this.draw_labels();
 };
 
 // Calling dc.update() from setInterval doesn't
