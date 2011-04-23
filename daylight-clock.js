@@ -638,11 +638,11 @@ DaylightClock.prototype.draw = function () {
     this.ctx.fillStyle = this.cBackground;
     this.ctx.fillRect(0, 0, this.w, this.h);
 
-    //this.draw_hourtics();
-    //this.draw_title();
+    this.draw_hourtics();
+    this.draw_title();
     this.draw_sectors();
     this.draw_hand();
-    //this.draw_labels();
+    this.draw_labels();
 };
 
 // Calling dc.update() from setInterval doesn't
@@ -653,16 +653,10 @@ function dcUpdate() {
 
 dc = new DaylightClock();
 
-// 12 hour format
-(function dom12h() {
+// Autorun function
+(function () {
     dc.setMode(12);
+    //dc.setMode(24);
     dc.init();
-    setInterval(dcUpdate, 1000);
+    setInterval(dc.update(), 1000);
 }());
-
-// 24 hour format
-function dom24h() {
-    dc.setMode(24);
-    dc.init();
-    setInterval(dcUpdate, 1000);
-}
