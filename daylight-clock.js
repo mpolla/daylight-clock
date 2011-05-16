@@ -37,8 +37,38 @@
 var SunriseSunset;
 var geoip_latitude, geoip_longitude, geoip_city, geoip_country_name;
 var zeroPad, dom12h, dom24h, DaylightClock;
-
 var dc;
+
+// Global object for geolocation data
+var geoloc = {};
+
+function init_geoloc() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(geolocation_query, geolocation_err);
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+function geolocation_err(error) {
+  switch(error.code) {
+   case error.PERMISSION_DENIED: alert("user did not share geolocation data");
+    break;
+   case error.POSITION_UNAVAILABLE: alert("could not detect current position");
+    break;
+   case error.TIMEOUT: alert("retrieving position timed out");
+    break;
+  default: alert("unknown error");
+    break;
+  }
+}
+
+function geolocation_query (position) {
+  geoloc.lat = position.coords.latitude;
+  geoloc.lon = position.coords.longitude;
+}
 
 window.onresize = function (event) {
     var tmpMode = dc.getMode();
@@ -143,7 +173,10 @@ DaylightClock.prototype.init = function () {
     this.latitude = parseFloat(this.httpParam('lat'));
     // Check for lat/long coordinates in URL parameters
     if (!this.httpParam('lat') && !this.httpParam('long')) {
-        this.geoIP();
+        //this.geoIP();
+      this.latitude = geoloc.lat;
+      this.longitude = geoloc.lon;
+      this.location_name = this.coordstr(parseFloat(this.latitude), parseFloat(this.longitude));
     } else {
         this.location_name = this.coordstr(this.latitude, this.longitude);
     }
@@ -183,6 +216,9 @@ DaylightClock.prototype.h2rad = function (hour) {
 DaylightClock.prototype.update = function () {
 
     var rh, sh, rht, sht, dt;
+
+    // FIXME: Only re-init when location is not set
+    this.init();
 
     this.d = new Date();
     dt = new Date(this.d.getTime() + 1000 * 60 * 60 * 24);
@@ -363,9 +399,9 @@ DaylightClock.prototype.midnightSun = function () {
 // Detect location using maxmind.com's service.
 DaylightClock.prototype.geoIP = function () {
     try {
-        this.latitude = geoip_latitude();
-        this.longitude = geoip_longitude();
-        this.location_name = geoip_city() + "/" + geoip_country_name();
+        this.latitude = geoloc.lat; //geoip_latitude();
+        this.longitude = geoloc.lon; //geoip_longitude();
+        this.location_name = geoloc.lat + "N " + geoloc.lon + "W";
     } catch (exception) {
         this.latitude = 0;
         this.longitude = 0;
@@ -651,12 +687,12 @@ function dcUpdate() {
     dc.update();
 }
 
-dc = new DaylightClock();
-
 // Autorun function
 (function () {
-    dc.setMode(12);
-    //dc.setMode(24);
-    dc.init();
-    setInterval(dc.update(), 1000);
+  init_geoloc();
+  dc = new DaylightClock();
+  dc.setMode(12);
+  //dc.setMode(24);
+  dc.init();
+  setInterval("dc.update()", 1000);
 }());
