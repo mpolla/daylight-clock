@@ -53,21 +53,34 @@ function init_geoloc() {
 }
 
 function geolocation_err(error) {
+
+  // If browser geolocation fails, detect location using IP address.
+  iplocation();
+  /*
   switch(error.code) {
-   case error.PERMISSION_DENIED: alert("user did not share geolocation data");
+   case error.PERMISSION_DENIED: alert("User did not share geolocation data");
     break;
-   case error.POSITION_UNAVAILABLE: alert("could not detect current position");
+   case error.POSITION_UNAVAILABLE: alert("Could not detect current position");
     break;
-   case error.TIMEOUT: alert("retrieving position timed out");
+   case error.TIMEOUT: alert("Retrieving position timed out");
     break;
   default: alert("unknown error");
     break;
   }
+  */
+}
+
+function iplocation () {
+    geoloc.lat = geoip_latitude();
+    geoloc.lon = geoip_longitude();
+    geoloc.source = "IP";
+    //alert('Using IP-based location.' + geoloc.lat + " " + geoloc.lon);
 }
 
 function geolocation_query (position) {
   geoloc.lat = position.coords.latitude;
   geoloc.lon = position.coords.longitude;
+  geoloc.source = "browser";
 }
 
 window.onresize = function (event) {
@@ -101,6 +114,7 @@ var DaylightClock = function () {
     this.cTic = "rgba(90,90,90,0.5)";
     this.cClockHand = "rgba(255,120,60,0.98)";
     this.cShadow = "rgba(120,120,120,0.6)";
+    this.cLabelBG = "rgba(235,235,235,1)";
 
     // Grab the canvas context.
     this.canvas = document.getElementById("daylight-clock");
@@ -131,7 +145,7 @@ var DaylightClock = function () {
     this.innerLabelFontSize = 0.02 * this.scale;
     this.innerLabelLineHeight = 0.02 * this.scale;
 
-    this.outerLabelRadius = 1.38 * this.rad;
+    this.outerLabelRadius = 1.3 * this.rad;
     this.outerLabelFontSize = 0.02 * this.scale;
     this.outerLabelLineHeight = 0.02 * this.scale;
 
@@ -220,7 +234,7 @@ DaylightClock.prototype.update = function () {
     // FIXME: Only re-init when location is not set
     this.init();
 
-    this.d = new Date();
+    this.d = new Date(this.d.getTime());
     dt = new Date(this.d.getTime() + 1000 * 60 * 60 * 24);
 
     this.offset =  -this.d.getTimezoneOffset() / 60;
@@ -403,10 +417,14 @@ DaylightClock.prototype.geoIP = function () {
         this.longitude = geoloc.lon; //geoip_longitude();
         this.location_name = geoloc.lat + "N " + geoloc.lon + "W";
     } catch (exception) {
-        this.latitude = 0;
-        this.longitude = 0;
+        this.latitude = geoip_latitude();
+        this.longitude = geoip_longitude();
         this.location_name = "Unknown location";
     }
+
+  this.latitude = geoip_latitude();
+  this.longitude = geoip_longitude();
+
 };
 
 DaylightClock.prototype.draw_hourtics = function () {
@@ -482,6 +500,41 @@ DaylightClock.prototype.draw_labels = function () {
         } else {
             this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
         }
+
+      // Draw bubbles behind sunset/sunrise labels
+      this.ctx.fillStyle = this.cLabelBG;
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.cx + this.rad * Math.cos(srad),
+                      this.cy + this.rad * Math.sin(srad));
+      this.ctx.arc(this.cx + this.rad * Math.cos(srad),
+                   this.cy + this.rad * Math.sin(srad),
+                   this.scale * 0.065, this.h2rad(this.setHour)+.7,
+                   this.h2rad(this.setHour)-.7, true);
+      this.ctx.moveTo(this.cx + this.rad * Math.cos(this.outerLabelRadius),
+                      this.cy + this.rad * Math.sin(this.outerLabelRadius));
+      this.ctx.arc(this.cx + this.outerLabelRadius * Math.cos(srad),
+                   this.cy + this.outerLabelRadius * Math.sin(srad),
+                   this.scale * 0.065, 0, 2 * Math.PI, true);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.cx + this.rad * Math.cos(rrad),
+                      this.cy + this.rad * Math.sin(rrad));
+      this.ctx.arc(this.cx + this.rad * Math.cos(rrad),
+                   this.cy + this.rad * Math.sin(rrad),
+                   this.scale * 0.065, this.h2rad(this.riseHour)+.7,
+                   this.h2rad(this.riseHour)-.7, true);
+      this.ctx.moveTo(this.cx + this.rad * Math.cos(this.outerLabelRadius),
+                      this.cy + this.rad * Math.sin(this.outerLabelRadius));
+      this.ctx.arc(this.cx + this.outerLabelRadius * Math.cos(rrad),
+                   this.cy + this.outerLabelRadius * Math.sin(rrad),
+                   this.scale * 0.065, 0, 2 * Math.PI, true);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.fillStyle = this.cText;
+
         this.ctx.fillText("sunset",
                           this.cx + this.outerLabelRadius * Math.cos(srad),
                           -this.outerLabelLineHeight + this.cy + this.outerLabelRadius * Math.sin(srad));
@@ -634,15 +687,16 @@ DaylightClock.prototype.draw_sectors = function () {
     }
 
     // Shade past hours since last sunrise/sunset
+  /*
     if (this.sunUp()) {
         lastEventHour = this.riseHour;
     } else {
         lastEventHour = this.setHour;
     }
-
     this.drawSector(this.cShadow, this.innerRad,
                     this.h2rad(this.hourNow),
                     this.h2rad(lastEventHour));
+  */
 
 };
 
@@ -689,6 +743,7 @@ function dcUpdate() {
 
 // Autorun function
 (function () {
+  iplocation();
   init_geoloc();
   dc = new DaylightClock();
   dc.setMode(12);
