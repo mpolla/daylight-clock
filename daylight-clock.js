@@ -43,31 +43,31 @@ var dc;
 var geoloc = {};
 
 function init_geoloc() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(geolocation_query, geolocation_err);
-    return true;
-  }
-  else {
-    return false;
-  }
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(geolocation_query, geolocation_err);
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 function geolocation_err(error) {
 
-  // If browser geolocation fails, detect location using IP address.
-  iplocation();
-  /*
-  switch(error.code) {
-   case error.PERMISSION_DENIED: alert("User did not share geolocation data");
-    break;
-   case error.POSITION_UNAVAILABLE: alert("Could not detect current position");
-    break;
-   case error.TIMEOUT: alert("Retrieving position timed out");
-    break;
-  default: alert("unknown error");
-    break;
-  }
-  */
+    // If browser geolocation fails, detect location using IP address.
+    iplocation();
+    /*
+      switch(error.code) {
+        case error.PERMISSION_DENIED: alert("User did not share geolocation data");
+        break;
+          case error.POSITION_UNAVAILABLE: alert("Could not detect current position");
+          break;
+            case error.TIMEOUT: alert("Retrieving position timed out");
+            break;
+            default: alert("unknown error");
+            break;
+            }
+    */
 }
 
 function iplocation () {
@@ -78,9 +78,9 @@ function iplocation () {
 }
 
 function geolocation_query (position) {
-  geoloc.lat = position.coords.latitude;
-  geoloc.lon = position.coords.longitude;
-  geoloc.source = "browser";
+    geoloc.lat = position.coords.latitude;
+    geoloc.lon = position.coords.longitude;
+    geoloc.source = "browser";
 }
 
 window.onresize = function (event) {
@@ -188,9 +188,9 @@ DaylightClock.prototype.init = function () {
     // Check for lat/long coordinates in URL parameters
     if (!this.httpParam('lat') && !this.httpParam('long')) {
         //this.geoIP();
-      this.latitude = geoloc.lat;
-      this.longitude = geoloc.lon;
-      this.location_name = this.coordstr(parseFloat(this.latitude), parseFloat(this.longitude));
+        this.latitude = geoloc.lat;
+        this.longitude = geoloc.lon;
+        this.location_name = this.coordstr(parseFloat(this.latitude), parseFloat(this.longitude));
     } else {
         this.location_name = this.coordstr(this.latitude, this.longitude);
     }
@@ -288,7 +288,7 @@ DaylightClock.prototype.update = function () {
 };
 
 // Transform floating point value into hour representation
-// e.g. 16.82 --> "16:49"
+    // e.g. 16.82 --> "16:49"
 DaylightClock.prototype.hourstr = function (hour) {
     var fullHrs = Math.floor(hour);
     return fullHrs + ":" +
@@ -307,7 +307,7 @@ DaylightClock.prototype.drawSector = function (color, radius, start, stop) {
 };
 
 // Format the title string describing time left
-// to next sunrise/sunset.
+    // to next sunrise/sunset.
 DaylightClock.prototype.timeremaining = function (time) {
 
     var hours, mins, secs;
@@ -331,7 +331,7 @@ DaylightClock.prototype.timeremaining = function (time) {
 
 
 // Transform floating point coordinates to
-// N/S,W/E notation.
+    // N/S,W/E notation.
 DaylightClock.prototype.coordstr = function (lat, lon) {
     var latstr, lonstr;
     latstr = "N";
@@ -422,8 +422,8 @@ DaylightClock.prototype.geoIP = function () {
         this.location_name = "Unknown location";
     }
 
-  this.latitude = geoip_latitude();
-  this.longitude = geoip_longitude();
+    this.latitude = geoip_latitude();
+    this.longitude = geoip_longitude();
 
 };
 
@@ -452,15 +452,15 @@ DaylightClock.prototype.draw_hourtics = function () {
         //    this.ctx.fillText(i, tmpx, tmpy);
         //}
 
-      //this.ctx.strokeStyle = this.cTic;
-      this.ctx.fillStyle = this.cTic;
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeStyle = this.cTic;
-      this.ctx.beginPath();
-      this.ctx.arc(this.cx + this.rad * Math.cos(this.h2rad(i)), this.cy + this.rad * Math.sin(this.h2rad(i)), this.scale * 0.01, 0, Math.PI * 2, true);
-      this.ctx.closePath();
-      this.ctx.stroke();
-      this.ctx.fill();
+        //this.ctx.strokeStyle = this.cTic;
+        this.ctx.fillStyle = this.cTic;
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = this.cTic;
+        this.ctx.beginPath();
+        this.ctx.arc(this.cx + this.rad * Math.cos(this.h2rad(i)), this.cy + this.rad * Math.sin(this.h2rad(i)), this.scale * 0.01, 0, Math.PI * 2, true);
+        this.ctx.closePath();
+        this.ctx.stroke();
+        this.ctx.fill();
     }
 
     // Print hour tics
@@ -501,39 +501,39 @@ DaylightClock.prototype.draw_labels = function () {
             this.ctx.font = this.outerLabelFontSize + "pt " + this.fontFamily;
         }
 
-      // Draw bubbles behind sunset/sunrise labels
-      this.ctx.fillStyle = this.cLabelBG;
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.cx + this.rad * Math.cos(srad),
-                      this.cy + this.rad * Math.sin(srad));
-      this.ctx.arc(this.cx + this.rad * Math.cos(srad),
-                   this.cy + this.rad * Math.sin(srad),
-                   this.scale * 0.065, this.h2rad(this.setHour)+.7,
-                   this.h2rad(this.setHour)-.7, true);
-      this.ctx.moveTo(this.cx + this.rad * Math.cos(this.outerLabelRadius),
-                      this.cy + this.rad * Math.sin(this.outerLabelRadius));
-      this.ctx.arc(this.cx + this.outerLabelRadius * Math.cos(srad),
-                   this.cy + this.outerLabelRadius * Math.sin(srad),
-                   this.scale * 0.065, 0, 2 * Math.PI, true);
-      this.ctx.closePath();
-      this.ctx.fill();
+        // Draw bubbles behind sunset/sunrise labels
+        this.ctx.fillStyle = this.cLabelBG;
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.cx + this.rad * Math.cos(srad),
+                        this.cy + this.rad * Math.sin(srad));
+        this.ctx.arc(this.cx + this.rad * Math.cos(srad),
+                     this.cy + this.rad * Math.sin(srad),
+                     this.scale * 0.065, this.h2rad(this.setHour)+.7,
+                     this.h2rad(this.setHour)-.7, true);
+        this.ctx.moveTo(this.cx + this.rad * Math.cos(this.outerLabelRadius),
+                        this.cy + this.rad * Math.sin(this.outerLabelRadius));
+        this.ctx.arc(this.cx + this.outerLabelRadius * Math.cos(srad),
+                     this.cy + this.outerLabelRadius * Math.sin(srad),
+                     this.scale * 0.065, 0, 2 * Math.PI, true);
+        this.ctx.closePath();
+        this.ctx.fill();
 
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.cx + this.rad * Math.cos(rrad),
-                      this.cy + this.rad * Math.sin(rrad));
-      this.ctx.arc(this.cx + this.rad * Math.cos(rrad),
-                   this.cy + this.rad * Math.sin(rrad),
-                   this.scale * 0.065, this.h2rad(this.riseHour)+.7,
-                   this.h2rad(this.riseHour)-.7, true);
-      this.ctx.moveTo(this.cx + this.rad * Math.cos(this.outerLabelRadius),
-                      this.cy + this.rad * Math.sin(this.outerLabelRadius));
-      this.ctx.arc(this.cx + this.outerLabelRadius * Math.cos(rrad),
-                   this.cy + this.outerLabelRadius * Math.sin(rrad),
-                   this.scale * 0.065, 0, 2 * Math.PI, true);
-      this.ctx.closePath();
-      this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.cx + this.rad * Math.cos(rrad),
+                        this.cy + this.rad * Math.sin(rrad));
+        this.ctx.arc(this.cx + this.rad * Math.cos(rrad),
+                     this.cy + this.rad * Math.sin(rrad),
+                     this.scale * 0.065, this.h2rad(this.riseHour)+.7,
+                     this.h2rad(this.riseHour)-.7, true);
+        this.ctx.moveTo(this.cx + this.rad * Math.cos(this.outerLabelRadius),
+                        this.cy + this.rad * Math.sin(this.outerLabelRadius));
+        this.ctx.arc(this.cx + this.outerLabelRadius * Math.cos(rrad),
+                     this.cy + this.outerLabelRadius * Math.sin(rrad),
+                     this.scale * 0.065, 0, 2 * Math.PI, true);
+        this.ctx.closePath();
+        this.ctx.fill();
 
-      this.ctx.fillStyle = this.cText;
+        this.ctx.fillStyle = this.cText;
 
         this.ctx.fillText("sunset",
                           this.cx + this.outerLabelRadius * Math.cos(srad),
@@ -687,16 +687,16 @@ DaylightClock.prototype.draw_sectors = function () {
     }
 
     // Shade past hours since last sunrise/sunset
-  /*
-    if (this.sunUp()) {
-        lastEventHour = this.riseHour;
-    } else {
-        lastEventHour = this.setHour;
-    }
-    this.drawSector(this.cShadow, this.innerRad,
-                    this.h2rad(this.hourNow),
-                    this.h2rad(lastEventHour));
-  */
+    /*
+      if (this.sunUp()) {
+      lastEventHour = this.riseHour;
+      } else {
+      lastEventHour = this.setHour;
+      }
+      this.drawSector(this.cShadow, this.innerRad,
+      this.h2rad(this.hourNow),
+      this.h2rad(lastEventHour));
+    */
 
 };
 
@@ -743,11 +743,11 @@ function dcUpdate() {
 
 // Autorun function
 (function () {
-  iplocation();
-  init_geoloc();
-  dc = new DaylightClock();
-  dc.setMode(12);
-  //dc.setMode(24);
-  dc.init();
-  setInterval("dc.update()", 1000);
+    iplocation();
+    init_geoloc();
+    dc = new DaylightClock();
+    dc.setMode(12);
+    //dc.setMode(24);
+    dc.init();
+    setInterval("dc.update()", 1000);
 }());
